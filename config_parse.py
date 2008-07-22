@@ -21,12 +21,19 @@ def ParseConfigFile(paths,default_options={}):
             else:
                 while config_txt.count("\n"):
                     config_txt.remove("\n")
-            
+                prev_line=""
                 for line in config_txt:
-                    line=line.strip("\n").strip()
-                    if line[0] != "#" and line.count("="):
-                        entry=line.split("=", 1)
-                        default_options[entry[0]]=entry[1]
+                    #print line[-2:] == '\\\n'
+                    if line[-2:] == "\\\n":
+                        prev_line=prev_line+ line.strip().strip("\\\n")
+                        #print prev_line
+                    else:    
+                        conf_line=prev_line + line.strip("\n").strip()
+                        prev_line=""
+                        line=line.strip("\n").strip()
+                        if conf_line[0] != "#" and conf_line.count("="):
+                            entry=conf_line.split("=", 1)
+                            default_options[entry[0]]=entry[1].split("#", 1)[0].strip()
     return default_options
 
 #default_options=dict(
@@ -40,5 +47,6 @@ if __name__ == "__main__":
     #paths=["/etc/rms/rms.conf","/home/cynyr/.config/rms/rms.conf",]
     import sys
     results=ParseConfigFile(sys.argv[1:])
+    print "----------- output --------"
     for key in results:
-        print key + "=" + results[key]
+        print key + "='" + results[key] + "'"

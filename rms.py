@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 import pygtk,gtk,gtk.glade,MySQLdb,gobject,os
-import config_parse.ParseConfigFile as ParseConfigFile
+#import config_parse.ParseConfigFile as ParseConfigFile
+from config_parse import ParseConfigFile
 
 class add_new_recipe:
     """A window and functions to add a new recipe"""
