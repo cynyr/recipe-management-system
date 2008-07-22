@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import pygtk,gtk,gtk.glade,MySQLdb,gobject,os
+import config_parse.ParseConfigFile as ParseConfigFile
 
 class add_new_recipe:
     """A window and functions to add a new recipe"""
@@ -97,7 +98,6 @@ class add_new_recipe:
             self.categories.append(name)
         else:
             self.categories.remove(name)
-
     def submit(self,widget):
         """Add or modify a recipe to or in the database
 
@@ -274,6 +274,16 @@ class home_window:
         gtk.main_quit()
 
 if __name__ == '__main__':
+    default_options=dict(
+        database_host="foo.foo.org",
+        database_uid="anon",
+        database_passwd="12345",
+        database_db="foo",
+    )
+    
+    paths=["/etc/rms/rms.conf","/home/cynyr/.config/rms/rms.conf",]
+    options=ParseConfigFile(paths,default_options)
+    print options
 	#test = add_new_recipe()
     main_window=home_window()
     main_window.start_main_loop()
