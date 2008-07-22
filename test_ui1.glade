@@ -1,0 +1,94 @@
+<?xml version="1.0" standalone="no"?> <!--*- mode: xml -*-->
+<!DOCTYPE glade-interface SYSTEM "http://gazpacho.sicem.biz/gazpacho-0.1.dtd">
+<glade-interface>
+    <widget class="GtkWindow" id="window1">
+        <property name="default_height">15</property>
+        <property name="default_width">440</property>
+        <property name="visible">True</property>
+        <signal handler="on_window1_destroy" name="destroy-event"/>
+        <signal handler="on_window1_destroy" name="destroy"/>
+        <signal handler="on_window1_keypress" name="key-press-event"/>
+        <child>
+            <widget class="GtkVBox" id="vbox1">
+                <property name="visible">True</property>
+                <child>
+                    <widget class="GtkHBox" id="hbox2">
+                        <property name="homogeneous">True</property>
+                        <property name="visible">True</property>
+                        <child>
+                            <widget class="GtkLabel" id="label11">
+                                <property name="label" context="yes" translatable="yes">Amount</property>
+                                <property name="visible">True</property>
+                                <property name="xalign">0.0</property>
+                            </widget>
+                        </child>
+                        <child>
+                            <widget class="GtkLabel" id="label12">
+                                <property name="justify">center</property>
+                                <property name="label" context="yes" translatable="yes">units</property>
+                                <property name="visible">True</property>
+                                <property name="xalign">0.0</property>
+                            </widget>
+                            <packing>
+                                <property name="position">1</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkLabel" id="label13">
+                                <property name="label" context="yes" translatable="yes">Ingredent</property>
+                                <property name="visible">True</property>
+                                <property name="xalign">0.0</property>
+                            </widget>
+                            <packing>
+                                <property name="position">2</property>
+                            </packing>
+                        </child>
+                    </widget>
+                </child>
+                <child>
+                    <widget class="GtkHBox" id="hbox1">
+                        <property name="height_request">20</property>
+                        <property name="homogeneous">True</property>
+                        <property name="visible">True</property>
+                        <child>
+                            <widget class="GtkEntry" id="e_amount">
+                                <property name="visible">True</property>
+                            </widget>
+                        </child>
+                        <child>
+                            <widget class="GtkComboBoxEntry" id="comboentry1">
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="position">1</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkEntry" id="e_ingredent">
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="position">2</property>
+                            </packing>
+                        </child>
+                    </widget>
+                    <packing>
+                        <property name="position">1</property>
+                    </packing>
+                </child>
+                <child>
+                    <widget class="GtkButton" id="button1">
+                        <property name="height_request">40</property>
+                        <property name="is_focus">True</property>
+                        <property name="label" context="yes" translatable="yes">press me</property>
+                        <property name="visible">True</property>
+                        <signal handler="on_button1_clicked" name="clicked"/>
+                    </widget>
+                    <packing>
+                        <property name="position">2</property>
+                    </packing>
+                </child>
+            </widget>
+        </child>
+    </widget>
+</glade-interface>
