@@ -11,7 +11,7 @@ def ParseConfigFile(paths,default_options={}):
         try: 
             config_file=open(path)
         except Exception, e:
-            print "could not find file: %s :skipping" % path
+            print "could not find file: %s : skipping" % path
         else:
             try:
                 config_txt=config_file.readlines()
@@ -25,7 +25,7 @@ def ParseConfigFile(paths,default_options={}):
                 for line in config_txt:
                     #print line[-2:] == '\\\n'
                     if line[-2:] == "\\\n":
-                        prev_line=prev_line+ line.strip().strip("\\\n")
+                        prev_line=prev_line + line.strip().strip("\\\n")
                         #print prev_line
                     else:    
                         conf_line=prev_line + line.strip("\n").strip()

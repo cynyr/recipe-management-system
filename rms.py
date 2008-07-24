@@ -22,7 +22,8 @@ class add_new_recipe:
         self.recipe_id=rid
 
 
-        print (self.update,self.recipe_id)
+        #debugging output print whether to update and the rid
+        #print (self.update,self.recipe_id)
         # Load Glade XML
         self.xml = gtk.glade.XML("rms_ui.glade")
         self.w = self.xml.get_widget('window1')
@@ -32,7 +33,9 @@ class add_new_recipe:
         self.xml.signal_connect('on_submit_clicked' , self.submit)
         
         #connect to the DB and get a cursor
-        self.con=MySQLdb.connect(host="localhost", db="rms", user="cynyr", passwd="abbg")
+        #self.con=MySQLdb.connect(host="localhost", db="rms", user="cynyr", passwd="abbg")
+        #opions is the global var with the options in it.
+        self.con=MySQLdb.connect(host=options['database_host'], db=options['database_db'], user=options['database_uid'], passwd=options['database_passwd'])
         self.cur=self.con.cursor()
         
 
@@ -60,7 +63,13 @@ class add_new_recipe:
 
     def get_current_data(self):
         self.cur.execute("""Select name,type,rank,directions from recipes where id=%s""", self.recipe_id)
-        print self.cur.fetchall()
+        self.info=self.cur.fetchall()[0]
+        self.current_values={}
+        self.current_values['name']=self.info[0]
+        self.current_values['type']=self.info[1]
+        self.current_values['rank']=int(self.info[2])
+        self.current_values['directions']=self.info[3]
+        print self.info
 
     def do_categories(self):
         
@@ -284,7 +293,7 @@ if __name__ == '__main__':
     
     paths=["/etc/rms/rms.conf","/home/cynyr/.config/rms/rms.conf",]
     options=ParseConfigFile(paths,default_options)
-    print options
+    #print options
 	#test = add_new_recipe()
     main_window=home_window()
     main_window.start_main_loop()
