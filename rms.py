@@ -62,14 +62,24 @@ class add_new_recipe:
         self.w.show_all()
 
     def get_current_data(self):
-        self.cur.execute("""Select name,type,rank,directions from recipes where id=%s""", self.recipe_id)
+        self.cur.execute("""Select name,type,rank,directions from recipes where id=%s""", (self.recipe_id,))
         self.info=self.cur.fetchall()[0]
+        #print self.info
         self.current_values={}
         self.current_values['name']=self.info[0]
         self.current_values['type']=self.info[1]
         self.current_values['rank']=int(self.info[2])
         self.current_values['directions']=self.info[3]
-        print self.info
+        print self.current_values
+        self.ingredents_strings=[]
+        self.cur.execute("""SELECT amount,unit_id,ingredent_id,notes from ingredent_map where recipe_id=%s""",(self.recipe_id,))
+        self.cur_ing=self.cur.fetchall()
+        for cur_ing_line in self.cur_ing:
+            print cur_ing_line
+            #self.cur_ing_line  (0,     1,      2,              3)
+            #                   (amount,unit_id,ingredent_id,   notes)
+
+
 
     def do_categories(self):
         
@@ -183,25 +193,33 @@ class add_new_recipe:
                     ammount,    units,  ingredent,  notes"""
 
                 #----Start get ingredent_id-----
-                self.cur.execute("select id from ingredents where ingredent=%s"\
-                                 ,(data[2].strip(),))
+                data[0]=data[0].strip()
+                data[1]=data[1].strip()
+                data[2]=data[2].strip()
+                self.cur.execute("select id from ingredents where ingredent=%s", (data[2],))
                 ingredent_id=self.cur.fetchone()
+                print ingredent_id
                 if ingredent_id==None:
-                    self.cur.execute("SELECT MAX(id) from ingredents")
-                    ingredent_id=self.cur.fetchone()[0] + 1
+                    self.cur.execute("""INSERT INTO ingredents (ingredent) VALUES (%s)""", (data[2],))
+                    #self.cur.execute("SELECT MAX(id) from ingredents")
+                    self.cur.execute("""SELECT id from ingredents where ingredent=%s""", (data[2],))
+                    #ingredent_id=self.cur.fetchone()[0] + 1
+                    ingredent_id=self.cur.fetchone()[0]
                 else:
                     ingredent_id=ingredent_id[0]
                 #----End of ingredent_id-----
 
                 #----Start of unit_id-----
-                self.cur.execute("SELECT id FROM units WHERE unit=%s or \
-                                  abbreviation=%s",\
-                                  (data[1].strip(),data[1].strip()))
+                self.cur.execute("SELECT id FROM units WHERE unit=%s or abbreviation=%s", (data[1],data[1]))
 
                 unit_id=self.cur.fetchone()
                 if unit_id == None:
-                    self.cur.execute("SELECT MAX(id) from units")
-                    unit_id=self.cur.fetchone()[0] + 1
+                    self.cur.execute("""INSERT INTO units (unit) VALUES (%s)""", (data[1],))
+                    #self.cur.execute("SELECT MAX(id) from units")
+                    self.cur.execute("""SELECT id FROM units WHERE unit=%s""", (data[1],))
+                    #NEED TO ADD THE FETCH AND GETTING THE ID
+                    #unit_id=self.cur.fetchone()[0] + 1
+                    unit_id=self.cur.fetchone()[0]
                 else:
                     unit_id=unit_id[0]
                 #----End of unit_id-----
@@ -277,7 +295,7 @@ class home_window:
     def add_clicked(self, widget):
         self.window.hide()
         add_new_window= add_new_recipe()
-    def show_recipe(self,widget,s_rid=7):
+    def show_recipe(self,widget,s_rid=11):
         recipe=add_new_recipe(update=True, rid=s_rid)
 
     def exit(self,widget):
