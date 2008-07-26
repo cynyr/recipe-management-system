@@ -50,15 +50,38 @@ class add_new_recipe:
         self.l = gtk.ListStore(gobject.TYPE_STRING) #Make a new liststore
         #Get some data
         self.cur.execute("""select type from types order by type""")
+        position=0
+        place=0
         for row in self.cur:
             #print row
             self.l.append([row[0]]) #Each line needs to be a list
+            if self.update and row[0] == self.current_values['type'] :
+                position=place
         self.ce.set_model(self.l) #set the model to the list
         self.ce.set_text_column(0) #use the first entry in the list of lists.
-        self.ce.set_active(0)
+        if self.update:
+            self.ce.set_active(position)
+        else:
+            self.ce.set_active(2)
         #-----------------------
         #----End of example-----
         #-----------------------
+        if self.update:
+            #set the name field to the name
+            self.xml.get_widget("e_name").set_text(self.current_values['name'])
+            #setting the ingredents textview string
+            self.tv_ing=self.xml.get_widget("tv_ing")
+            self.tb_ing=self.tv_ing.get_buffer()
+            self.tb_ing.set_text(self.current_values["ingredents"])
+            #setting the directions textview string
+            self.tv_dir=self.xml.get_widget("tv_dir")
+            self.tb_dir=self.tv_dir.get_buffer()
+            self.tb_dir.set_text(self.current_values['directions'])
+            #setting the rating
+            self.sb_rating=self.xml.get_widget("sb_rating")
+            self.sb_rating.set_value(self.current_values['rank'])
+            self.sb_rating.update()
+
         self.w.show_all()
 
     def get_current_data(self):
@@ -96,8 +119,7 @@ class add_new_recipe:
                                 (id,))
             cur_category=self.cur.fetchone()[0]
             self.current_values["catagories"].append(cur_category)
-        #print self.current_values["catagories"]
-        print self.current_values
+        #print self.current_values
 
 
     def do_categories(self):
@@ -121,6 +143,10 @@ class add_new_recipe:
             else:
                 self.hb.add(self.cb)
                 self.column = self.column +1
+            if self.update and \
+             self.cb_label in self.current_values["catagories"]:
+                self.cb.set_active(True)
+                
         self.e_new_cat=gtk.Entry()
         self.e_new_cat.set_tooltip_text("a comma seperated list of categories")
         self.hb=gtk.HBox(False, 0)

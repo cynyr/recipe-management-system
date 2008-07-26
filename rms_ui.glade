@@ -19,7 +19,7 @@
                         <property name="shadow_type">none</property>
                         <property name="visible">True</property>
                         <child>
-                            <widget class="GtkEntry" id="entry1">
+                            <widget class="GtkEntry" id="e_name">
                                 <property name="is_focus">True</property>
                                 <property name="shadow_type">none</property>
                                 <property name="visible">True</property>
@@ -90,6 +90,7 @@ ex: "3/4, cup, mint leaves, finely chopped"</property>
                                 <property name="visible">True</property>
                                 <child>
                                     <widget class="GtkTextView" id="tv_dir">
+                                        <property name="is_focus">True</property>
                                         <property name="visible">True</property>
                                         <property name="width_request">75</property>
                                         <property name="wrap_mode">word-char</property>
@@ -149,7 +150,7 @@ ex: "3/4, cup, mint leaves, finely chopped"</property>
                         <property name="shadow_type">none</property>
                         <property name="visible">True</property>
                         <child>
-                            <widget class="GtkSpinButton" id="spinbutton1">
+                            <widget class="GtkSpinButton" id="sb_rating">
                                 <property name="adjustment">0 0 5 1 10 0</property>
                                 <property name="text" context="yes" translatable="yes">0</property>
                                 <property name="visible">True</property>
