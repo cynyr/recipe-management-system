@@ -70,15 +70,34 @@ class add_new_recipe:
         self.current_values['type']=self.info[1]
         self.current_values['rank']=int(self.info[2])
         self.current_values['directions']=self.info[3]
-        print self.current_values
         self.ingredents_strings=[]
         self.cur.execute("""SELECT amount,unit_id,ingredent_id,notes from ingredent_map where recipe_id=%s""",(self.recipe_id,))
         self.cur_ing=self.cur.fetchall()
         for cur_ing_line in self.cur_ing:
-            print cur_ing_line
-            #self.cur_ing_line  (0,     1,      2,              3)
-            #                   (amount,unit_id,ingredent_id,   notes)
-
+            #cur_ing_line  (0,     1,      2,              3)
+            #              (amount,unit_id,ingredent_id,   notes)
+            self.cur.execute("""SELECT unit FROM units where id=%s""",\
+                             (cur_ing_line[1],))
+            unit_name=self.cur.fetchall()[0][0]
+            self.cur.execute("""SELECT ingredent FROM ingredents where id=%s"""\
+                             , (cur_ing_line[2],))
+            ingredent_name=self.cur.fetchall()[0][0]
+            new_string=cur_ing_line[0] + "," + unit_name + "," + ingredent_name\
+                            + "," + cur_ing_line[3].strip() + "\n"
+            self.ingredents_strings.append(new_string)
+        self.current_values["ingredents"]="".join(self.ingredents_strings)
+        self.current_values["catagories"]=[]
+        self.cur.execute("""SELECT category_id FROM category_map WHERE id=%s"""\
+                         , (self.recipe_id,))
+        cur_cat_ids=self.cur.fetchall()
+        for id in cur_cat_ids:
+            id=id[0]
+            self.cur.execute("""SELECT category FROM category WHERE id=%s""",\
+                                (id,))
+            cur_category=self.cur.fetchone()[0]
+            self.current_values["catagories"].append(cur_category)
+        #print self.current_values["catagories"]
+        print self.current_values
 
 
     def do_categories(self):
@@ -272,7 +291,7 @@ class home_window:
         self.search_entry=gtk.Entry()
         self.vbox=gtk.VBox()
         self.hbox=gtk.HBox()
-        self.label=gtk.Label("Enter name to search for here")
+        self.label=gtk.Label("Enter name to search for here: ")
         self.hbox.add(self.label)
         self.hbox.add(self.search_entry)
         self.vbox.add(self.hbox)
@@ -282,7 +301,7 @@ class home_window:
         self.b_add_new=gtk.Button("Add new Recipe")
         self.b_add_new.connect("clicked", self.add_clicked)
         self.vbox.add(self.b_add_new)
-        self.b_show_rid1=gtk.Button("show recipe #1")
+        self.b_show_rid1=gtk.Button("show recipe #11")
         self.b_show_rid1.connect("clicked", self.show_recipe)
         self.vbox.add(self.b_show_rid1)
         self.window.add(self.vbox)
