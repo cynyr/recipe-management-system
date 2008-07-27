@@ -35,7 +35,10 @@ class add_new_recipe:
         #connect to the DB and get a cursor
         #self.con=MySQLdb.connect(host="localhost", db="rms", user="cynyr", passwd="abbg")
         #opions is the global var with the options in it.
-        self.con=MySQLdb.connect(host=options['database_host'], db=options['database_db'], user=options['database_uid'], passwd=options['database_passwd'])
+        self.con=MySQLdb.connect(host=options['database_host'],\
+                                 db=options['database_db'],\
+                                 user=options['database_uid'],\
+                                 passwd=options['database_passwd'])
         self.cur=self.con.cursor()
         
 
@@ -332,19 +335,62 @@ class home_window:
         self.vbox.add(self.b_show_rid1)
         self.window.add(self.vbox)
         self.window.show_all()
-
-    def start_main_loop(self,):
         gtk.main()
+
+    #def start_main_loop(self,):
+        #gtk.main()
     def submit_clicked(self,widget):
-        print self.search_entry.get_text()
+        self.searchstring=self.search_entry.get_text()
+        print self.searchstring
+        self.search=search_results_window(searchline=self.searchstring)
     def add_clicked(self, widget):
         self.window.hide()
         add_new_window= add_new_recipe()
     def show_recipe(self,widget,s_rid=11):
         recipe=add_new_recipe(update=True, rid=s_rid)
-
     def exit(self,widget):
         gtk.main_quit()
+
+class search_results_window:
+    """A results window for a searching for a recipe"""
+
+    def __init__ (self, searchline=""):
+        self.window=gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.window.connect("destroy", self.exit)
+        self.vbox=gtk.VBox(True,0)
+        self.window.add(self.vbox)
+
+        self.con=MySQLdb.connect(host=options['database_host'],\
+                                 db=options['database_db'],\
+                                 user=options['database_uid'],\
+                                 passwd=options['database_passwd'])
+        self.cur=self.con.cursor()
+        searchline="%" + searchline + "%"
+        self.cur.execute("""SELECT id,name FROM recipes WHERE name LIKE %s""",\
+                         (searchline,))
+        results=self.cur.fetchall()
+        print results
+        for button_data in results:
+            self.b=gtk.Button(button_data[1])
+            self.b.connect("clicked", self.show_recipe, button_data[0])
+            self.vbox.add(self.b)
+        self.window.show_all()
+
+    def show_recipe(self,widget,data):
+        self.window.hide()
+        recipe=add_new_recipe(update=True,rid=data)
+
+
+
+
+
+    def exit(self, widget):
+        #print "boo"
+        pass
+        #main_window.window.show()
+    
+
+    
 
 if __name__ == '__main__':
     default_options=dict(
@@ -359,5 +405,5 @@ if __name__ == '__main__':
     #print options
 	#test = add_new_recipe()
     main_window=home_window()
-    main_window.start_main_loop()
+    #main_window.start_main_loop()
 	#gtk.main()
