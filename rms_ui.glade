@@ -57,24 +57,39 @@
                     <widget class="GtkHBox" id="hbox1">
                         <property name="visible">True</property>
                         <child>
-                            <widget class="GtkFrame" id="f_ing">
-                                <property name="label" context="yes" translatable="yes">Ingredents</property>
-                                <property name="shadow">none</property>
-                                <property name="shadow_type">none</property>
-                                <property name="visible">True</property>
+                            <widget class="GtkVBox" id="vbox1">
                                 <child>
-                                    <widget class="GtkTextView" id="tv_ing">
-                                        <property name="has_tooltip">True</property>
-                                        <property name="height_request">200</property>
-                                        <property name="is_focus">True</property>
-                                        <property name="tooltip_markup" context="yes" translatable="yes">1 per line with comma between fields,
+                                    <widget class="GtkFrame" id="f_ing">
+                                        <property name="label" context="yes" translatable="yes">Ingredents</property>
+                                        <property name="shadow">none</property>
+                                        <property name="shadow_type">none</property>
+                                        <property name="visible">True</property>
+                                        <child>
+                                            <widget class="GtkHBox" id="hbox3">
+                                                <child>
+                                                    <widget class="GtkScrolledWindow" id="scrolledwindow2">
+                                                        <property name="hscrollbar_policy">automatic</property>
+                                                        <property name="visible">True</property>
+                                                        <property name="vscrollbar_policy">automatic</property>
+                                                        <child>
+                                                            <widget class="GtkTextView" id="tv_ing">
+                                                                <property name="has_tooltip">True</property>
+                                                                <property name="height_request">200</property>
+                                                                <property name="is_focus">True</property>
+                                                                <property name="tooltip_markup" context="yes" translatable="yes">1 per line with comma between fields,
 &amp;quot;amount, unit, prep notes, ingredent&amp;quot;
 ex: &amp;quot;3/4, cup, mint leaves, finely chopped&amp;quot;</property>
-                                        <property name="tooltip_text" context="yes" translatable="yes">1 per line with comma between fields,
+                                                                <property name="tooltip_text" context="yes" translatable="yes">1 per line with comma between fields,
 "amount, unit, prep notes, ingredent"
 ex: "3/4, cup, mint leaves, finely chopped"</property>
-                                        <property name="visible">True</property>
-                                        <property name="width_request">75</property>
+                                                                <property name="visible">True</property>
+                                                                <property name="width_request">75</property>
+                                                            </widget>
+                                                        </child>
+                                                    </widget>
+                                                </child>
+                                            </widget>
+                                        </child>
                                     </widget>
                                 </child>
                             </widget>
@@ -89,11 +104,22 @@ ex: "3/4, cup, mint leaves, finely chopped"</property>
                                 <property name="shadow_type">none</property>
                                 <property name="visible">True</property>
                                 <child>
-                                    <widget class="GtkTextView" id="tv_dir">
-                                        <property name="is_focus">True</property>
-                                        <property name="visible">True</property>
-                                        <property name="width_request">75</property>
-                                        <property name="wrap_mode">word-char</property>
+                                    <widget class="GtkHBox" id="hbox2">
+                                        <child>
+                                            <widget class="GtkScrolledWindow" id="scrolledwindow1">
+                                                <property name="hscrollbar_policy">automatic</property>
+                                                <property name="visible">True</property>
+                                                <property name="vscrollbar_policy">automatic</property>
+                                                <child>
+                                                    <widget class="GtkTextView" id="tv_dir">
+                                                        <property name="is_focus">True</property>
+                                                        <property name="visible">True</property>
+                                                        <property name="width_request">75</property>
+                                                        <property name="wrap_mode">word-char</property>
+                                                    </widget>
+                                                </child>
+                                            </widget>
+                                        </child>
                                     </widget>
                                 </child>
                             </widget>
@@ -112,7 +138,7 @@ ex: "3/4, cup, mint leaves, finely chopped"</property>
                     </packing>
                 </child>
                 <child>
-                    <widget class="GtkButton" id="button1">
+                    <widget class="GtkButton" id="b_submit">
                         <property name="is_focus">True</property>
                         <property name="label" context="yes" translatable="yes">Submit</property>
                         <property name="visible">True</property>

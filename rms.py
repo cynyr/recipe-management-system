@@ -84,6 +84,7 @@ class add_new_recipe:
             self.sb_rating=self.xml.get_widget("sb_rating")
             self.sb_rating.set_value(self.current_values['rank'])
             self.sb_rating.update()
+            self.xml.get_widget("b_submit").hide()
 
         self.w.show_all()
 
@@ -309,6 +310,7 @@ class add_new_recipe:
         """quit"""
         self.w.hide()
         main_window.window.show()
+        #__main__.home_window.window.show()
         #gtk.main_quit()
 
 class home_window:
@@ -330,15 +332,15 @@ class home_window:
         self.b_add_new=gtk.Button("Add new Recipe")
         self.b_add_new.connect("clicked", self.add_clicked)
         self.vbox.add(self.b_add_new)
-        self.b_show_rid1=gtk.Button("show recipe #11")
-        self.b_show_rid1.connect("clicked", self.show_recipe)
-        self.vbox.add(self.b_show_rid1)
+        #self.b_show_rid1=gtk.Button("show recipe #11")
+        #self.b_show_rid1.connect("clicked", self.show_recipe)
+        #self.vbox.add(self.b_show_rid1)
         self.window.add(self.vbox)
         self.window.show_all()
-        gtk.main()
-
-    #def start_main_loop(self,):
         #gtk.main()
+
+    def start_main_loop(self,):
+        gtk.main()
     def submit_clicked(self,widget):
         self.searchstring=self.search_entry.get_text()
         print self.searchstring
@@ -355,6 +357,7 @@ class search_results_window:
     """A results window for a searching for a recipe"""
 
     def __init__ (self, searchline=""):
+        main_window.window.hide()
         self.window=gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.connect("destroy", self.exit)
         self.vbox=gtk.VBox(True,0)
@@ -380,18 +383,11 @@ class search_results_window:
         self.window.hide()
         recipe=add_new_recipe(update=True,rid=data)
 
-
-
-
-
     def exit(self, widget):
-        #print "boo"
-        pass
-        #main_window.window.show()
+        main_window.window.show()
     
 
     
-
 if __name__ == '__main__':
     default_options=dict(
         database_host="foo.foo.org",
@@ -399,11 +395,7 @@ if __name__ == '__main__':
         database_passwd="12345",
         database_db="foo",
     )
-    
     paths=["/etc/rms/rms.conf","/home/cynyr/.config/rms/rms.conf",]
     options=ParseConfigFile(paths,default_options)
-    #print options
-	#test = add_new_recipe()
     main_window=home_window()
-    #main_window.start_main_loop()
-	#gtk.main()
+    main_window.start_main_loop()
