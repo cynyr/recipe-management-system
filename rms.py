@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import pygtk,gtk,gtk.glade,MySQLdb,gobject,os
+import pygtk,gtk,gtk.glade,MySQLdb,gobject,os,string
 #import config_parse.ParseConfigFile as ParseConfigFile
 from config_parse import ParseConfigFile
 
@@ -84,9 +84,10 @@ class add_new_recipe:
             self.sb_rating=self.xml.get_widget("sb_rating")
             self.sb_rating.set_value(self.current_values['rank'])
             self.sb_rating.update()
-            self.xml.get_widget("b_submit").hide()
 
         self.w.show_all()
+        if self.update:
+            self.xml.get_widget("b_submit").hide()
 
     def get_current_data(self):
         self.cur.execute("""Select name,type,rank,directions from recipes where id=%s""", (self.recipe_id,))
@@ -177,25 +178,26 @@ class add_new_recipe:
         """
         
         #----Start get Name----
-        self.name=self.xml.get_widget("entry1").get_text()
-        print "name: " + self.name
+        self.name=self.xml.get_widget("e_name").get_text()
+        #print "name: " + self.name
         #----End name-----
 
         #----Start get type-----
         type=self.xml.get_widget("ce_types").get_active_text()
-        print "type: " + type
+        #print "type: " + type
         #----End get type-----
 
         #----Start get rating-----
-        rating=self.xml.get_widget("spinbutton1").get_value_as_int()
-        print "rating: " + str(rating)
+        rating=self.xml.get_widget("sb_rating").get_value_as_int()
+        #print "rating: " + str(rating)
         #----End get rating-----
 
         #----Start new categories-----
         for cat in self.e_new_cat.get_text().split(','):
+            cat=string.capwords(cat)
             if cat != "":
                 self.categories.append(cat)
-                print "insert into category (category) values (%s)" % (cat,)
+                #print "insert into category (category) values (%s)" % (cat,)
                 self.cur.execute("insert into category (category) values (%s)",(cat,))
         #----End new categories-----
 
@@ -296,7 +298,10 @@ class add_new_recipe:
             print 'insert into category_map (id,category_id) values (%s,%s)' % (self.recipe_id, cat_id) 
             self.cur.execute("insert into category_map (id,category_id) values (%s,%s)",(self.recipe_id, cat_id) )
         #-----End categories inserts-----
-        print self.dir_text
+        #print self.dir_text
+        self.window.hide()
+        self.window.destroy()
+        
 
             
 
