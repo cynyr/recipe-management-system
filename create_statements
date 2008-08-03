@@ -16,11 +16,6 @@ create table category (id int(10) primary key auto_increment, category varchar(1
 #table category_map
 create table category_map (id int(10) primary key auto_increment, category_id int(10))
 
-#needed tables
---category
---category_map 
--ingredient_map 
---ingredients
---recipes
---types
---units
+#table ingredient_map
+create table ingredient_map (recipe_id int(10), amount varchar(75), unit_id int(10), ingredent_id int(10), notes varchar(75))
+
