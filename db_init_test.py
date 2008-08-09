@@ -41,33 +41,33 @@ def init_db(cur):
             print (e.args)
         else:
             cur.execute("""COMMIT""")
-
-default_options=dict(
-    database_host="foo.foo.org",
-    database_uid="anon",
-    database_passwd="12345",
-    database_db="foo",
-)
-
-paths=["/etc/rms/rms.conf","/home/cynyr/.config/rms/rms.conf","./rms.conf"]
-options=ParseConfigFile(paths,default_options)
-try:
-    con=MySQLdb.connect(host=options['database_host'],\
-                                 db=options['database_db'],\
-                                 user=options['database_uid'],\
-                                 passwd=options['database_passwd'])
-except MySQLdb.Error,e:
-    print e.args
-    #print "could not connect to db"
-
-cur=con.cursor()
-#print options
-ans=raw_input("This will erase all data in the database '" + options['database_db'] + "' [Yes/No] ") 
-print ans
-
-if ans.lower() == "yes":
-    print "resetting the DB"
+if __name__ == "__main__":
+    default_options=dict(
+        database_host="foo.foo.org",
+        database_uid="anon",
+        database_passwd="12345",
+        database_db="foo",
+    )
+    
+    paths=["/etc/rms/rms.conf","/home/cynyr/.config/rms/rms.conf","./rms.conf"]
+    options=ParseConfigFile(paths,default_options)
+    try:
+        con=MySQLdb.connect(host=options['database_host'],\
+                                    db=options['database_db'],\
+                                    user=options['database_uid'],\
+                                    passwd=options['database_passwd'])
+    except MySQLdb.Error,e:
+        print e.args
+        #print "could not connect to db"
+    
+    cur=con.cursor()
+    #print options
+    ans=raw_input("This will erase all data in the database '" + options['database_db'] + "' [Yes/No] ") 
+    print ans
+    
+    if ans.lower() == "yes":
+        print "resetting the DB"
     init_db(cur)
-else:
-    print "Saving the DB"
-#cur.execute("""  """)
+    else:
+        print "Saving the DB"
+    #cur.execute("""  """)
