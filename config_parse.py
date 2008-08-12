@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-def ParseConfigFile(paths,default_options={}):
+def ParseConfigFile(paths,default_options={},markers=[';','#','//']):
     """ parse a configuration file and return a dictonary
         
         Parse a config file using the below comment markers, and return
         a dictionary with the option name as the key and the value as the value.
         Trailing comments are supported, 
     """
-    comment_markers=[';','#','//','/']
+    comment_markers=markers
     for path in paths:
         try: 
             #try to open the file
@@ -58,6 +58,6 @@ def ParseConfigFile(paths,default_options={}):
 if __name__ == "__main__":
     import sys
     results=ParseConfigFile(sys.argv[1:])
-    print "----------- output --------"
+    #print "----------- output --------"
     for key in results:
         print key + "='" + results[key] + "'"
