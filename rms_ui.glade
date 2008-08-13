@@ -152,7 +152,7 @@ ex: "3/4, cup, mint leaves, finely chopped"</property>
                                 <property name="visible">True</property>
                                 <property name="vscrollbar_policy">automatic</property>
                                 <child>
-                                    <widget class="GtkTextView" id="textview1">
+                                    <widget class="GtkTextView" id="tv_desc">
                                         <property name="height_request">48</property>
                                         <property name="is_focus">True</property>
                                         <property name="visible">True</property>

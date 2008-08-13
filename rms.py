@@ -90,7 +90,7 @@ class add_new_recipe:
             self.xml.get_widget("b_submit").hide()
 
     def get_current_data(self):
-        self.cur.execute("""Select name,type,rank,directions from recipes where id=%s""", (self.recipe_id,))
+        self.cur.execute("""Select name,type,rank,directions,description from recipes where id=%s""", (self.recipe_id,))
         self.info=self.cur.fetchall()[0]
         #print self.info
         self.current_values={}
@@ -98,6 +98,7 @@ class add_new_recipe:
         self.current_values['type']=self.info[1]
         self.current_values['rank']=int(self.info[2])
         self.current_values['directions']=self.info[3]
+        self.current_values['description']=self.info[4]
         self.ingredents_strings=[]
         self.cur.execute("""SELECT amount,unit_id,ingredent_id,notes from ingredent_map where recipe_id=%s""",(self.recipe_id,))
         self.cur_ing=self.cur.fetchall()
@@ -212,6 +213,8 @@ class add_new_recipe:
         self.ing_text=self.tb_ing.get_text(self.tb_ing.get_start_iter(), 
                                             self.tb_ing.get_end_iter())
         #----End of ingredents text-----
+
+        #----Start of description text-----
 
         #----Start recipie insert-----
         self.cur.execute("insert into recipes (name,type,rank,directions) VALUES (%s,%s,%s,%s)",(self.name,type,rating,self.dir_text))

@@ -47,6 +47,8 @@ def ParseConfigFile(paths,default_options={},markers=[';','#','//']):
                         if not is_comment:
                             entry=conf_line.split("=", 1)
                             value=entry[1]
+                            #check for tailing comments, should support
+                            #the use of more than one type of marker. 
                             for marker in comment_markers:
                                 if entry[1].count(marker):
                                     value=value.split(marker,1)[0].strip()
