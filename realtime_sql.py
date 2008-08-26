@@ -3,8 +3,14 @@
 
 import MySQLdb
 
-con = MySQLdb.connect(host="localhost", user="cynyr", passwd="abbg", db="rms")
-cur = con.cursor()
+con = MySQLdb.connect(
+                        host="localhost",
+                        user="cynyr", 
+                        passwd="abbg", 
+                        db="rms",
+                      )
+#cur = con.cursor() #normal cursor, returns tupels
+cur = con.cursor(MySQLdb.cursors.DictCursor) #DictCursor returns a dict
 
 buffer = ""
 
