@@ -8,11 +8,10 @@ class base_recipe_window:
 
         This creates new recipie window. It connects to the database
         and sets up the cursor. It populates a dropdown from
-        data in the database.
+        data in the database. Closes the cursor when finished.
 
         """
-        self.update=False
-        # Load Glade XML
+        #Load Glade XML
         self.xml = gtk.glade.XML("rms_ui.glade")
         self.w = self.xml.get_widget('window1')
         #Make sure that we "exit" when the window is closed
@@ -67,9 +66,6 @@ class base_recipe_window:
                     self.cb_label=categories.pop(0)[0]
                     #create a checkbutton with that label
                     self.cb=gtk.CheckButton(self.cb_label)
-                    #hook the clicked event and pass along the lable...
-                    #which is silly but needed at the moment.
-                    #self.cb.connect("clicked", self.cb_clicked, self.cb_label)
                 else:
                     self.cb=gtk.Label("")
                 self.hb.add(self.cb)
@@ -135,15 +131,15 @@ class base_recipe_window:
             if add:
                 if self.add_unit(unit):
                     self.cur.execute("""SELECT unit_id FROM units WHERE unit=%s""", [unit])
-                    id=self.cur.fetchone()[0]
+                    u_id=self.cur.fetchone()[0]
                 else:
-                    id=None
+                    u_id=None
             else:
-                id=None
+                u_id=None
         else:
-            id=result[0]
+            u_id=result[0]
 
-        return id
+        return u_id
 
     def add_ingredient(self,ingredient):
         try:
@@ -166,15 +162,15 @@ class base_recipe_window:
                     self.cur.execute(
                         """SELECT ingredient_id FROM ingredients WHERE ingredient=%s""",
                         (ingredient,))
-                    id=self.cur.fetchone()[0]
+                    i_id=self.cur.fetchone()[0]
                 else:
-                    id=None
+                    i_id=None
             else:
-                id=None
+                i_id=None
         else:
-            id=result[0]
+            i_id=result[0]
 
-        return id
+        return i_id
     
     def get_type_id(self, type):
         self.cur.execute("""SELECT type_id FROM types WHERE type=%s""",(type,))
@@ -202,8 +198,15 @@ class base_recipe_window:
         return data
 
     def parse_ingredients(self,txt):
+        """Parse text and return a list of lists for each line.
+
+        Each line becomes a a list; amount,unit,ingredent,notes. 
+        If there are no notes, add a empty string to the end. 
+        """
         l=[]
         for line in txt.split('\n'):
+            #split the line on commas, it would be nice if this could be
+            #replaced with something that didn't need the commas
             l1=line.split(',',3)
             if len(l1) > 2:
                 if len(l1) < 4:
@@ -247,13 +250,11 @@ class base_recipe_window:
             l.append((id,cat_id))
         return l
     
-    def exit(self,*args):
-        """quit"""
+    def exit(self,*args,**kwords):
+        """quit, hiding the window, then showing the main window again."""
         self.w.hide()
         self.w.destroy()
         main_window.window.show()
-        #__main__.home_window.window.show()
-        #gtk.main_quit()
 
 class add_new_recipe(base_recipe_window):
     """A window building off of the base window to add a new recipe"""
@@ -319,141 +320,6 @@ class add_new_recipe(base_recipe_window):
             self.cur.close()
             self.exit("done")
         
-    def submit(self,widget):
-        """Add a recipe to the database
-
-        This function adds a recipe the database and extracts needed info
-        from the database as well. Needed info is the ID number so this
-        one can be found. Also each ingredient and unit ID is needed.
-
-        """
-        
-        #----Start get Name----
-        self.name=self.xml.get_widget("e_name").get_text()
-        #print "name: " + self.name
-        #----End name-----
-
-        #----Start get type-----
-        type=self.xml.get_widget("ce_types").get_active_text()
-        #print "type: " + type
-        #----End get type-----
-
-        #----Start get rating-----
-        rating=self.xml.get_widget("sb_rating").get_value_as_int()
-        #print "rating: " + str(rating)
-        #----End get rating-----
-
-        #----Start new categories-----
-        self.new_cat=[]
-        for cat in self.e_new_cat.get_text().split(','):
-            if cat != "":
-                cat=string.capwords(cat)
-                self.new_cat.append(cat)
-                #print "insert into category (category) values (%s)" % (cat,)
-                self.cur.execute("insert into category (category) values (%s)",(cat,))
-        #----End new categories-----
-
-        #----Start Getting directions text-----
-        self.tb_dir=self.xml.get_widget("tv_dir").get_buffer()
-        self.dir_text=self.tb_dir.get_text(self.tb_dir.get_start_iter(), 
-                                            self.tb_dir.get_end_iter())
-        #----End of directions text-----
-
-        #----Start of getting ingredients text----
-        self.tb_ing=self.xml.get_widget("tv_ing").get_buffer()
-        self.ing_text=self.tb_ing.get_text(self.tb_ing.get_start_iter(), 
-                                            self.tb_ing.get_end_iter())
-        #----End of ingredients text-----
-
-        #----Start of description text-----
-        self.tb_desc=self.xml.get_widget("tv_desc").get_buffer()
-        self.desc_text=self.tb_desc.get_text(self.tb_desc.get_start_iter(),
-                                             self.tb_desc.get_end_iter())
-
-        #----Start recipie insert-----
-        self.cur.execute("insert into recipes (name,type,rank,directions,description) VALUES (%s,%s,%s,%s,%s)",(self.name,type,rating,self.dir_text,self.desc_text))
-        #----Start recipe_id-----
-        self.cur.execute("""select id from recipes where name=%s""", (self.name,))
-        possible_ids=self.cur.fetchall()
-        #print possible_ids
-        self.recipe_id=1
-        for self.ids in possible_ids:
-            self.new_id=self.ids[0]
-            print self.new_id
-            if self.recipe_id < self.new_id:
-                self.recipe_id=self.new_id
-        #----End of recipe_id-----
-
-        #-----Start ingredient_map inserts-----
-        for line in self.ing_text.split('\n'):
-            if line == "":
-                break
-            else:
-                data=line.split(',')
-                """ notes for the fields in data
-                    0           1       2           3+
-                    ammount,    units,  ingredient,  notes"""
-
-                #----Start get ingredient_id-----
-                data[0]=data[0].strip()
-                data[1]=data[1].strip()
-                data[2]=data[2].strip()
-                self.cur.execute("select id from ingredients where ingredient=%s", (data[2],))
-                ingredient_id=self.cur.fetchone()
-                print ingredient_id
-                if ingredient_id==None:
-                    self.cur.execute("""INSERT INTO ingredients (ingredient) VALUES (%s)""", (data[2],))
-                    #self.cur.execute("SELECT MAX(id) from ingredients")
-                    self.cur.execute("""SELECT id from ingredients where ingredient=%s""", (data[2],))
-                    #ingredient_id=self.cur.fetchone()[0] + 1
-                    ingredient_id=self.cur.fetchone()[0]
-                else:
-                    ingredient_id=ingredient_id[0]
-                #----End of ingredient_id-----
-
-                #----Start of unit_id-----
-                self.cur.execute("SELECT id FROM units WHERE unit=%s or abbreviation=%s", (data[1],data[1]))
-
-                unit_id=self.cur.fetchone()
-                if unit_id == None:
-                    self.cur.execute("""INSERT INTO units (unit) VALUES (%s)""", (data[1],))
-                    #self.cur.execute("SELECT MAX(id) from units")
-                    self.cur.execute("""SELECT id FROM units WHERE unit=%s""", (data[1],))
-                    #unit_id=self.cur.fetchone()[0] + 1
-                    unit_id=self.cur.fetchone()[0]
-                else:
-                    unit_id=unit_id[0]
-                #----End of unit_id-----
-
-                #----Start of Notes-----
-                if len(data) < 4:
-                    notes=""
-                else:
-                    notes="".join(data[3:])
-                #----End of Notes-----
-
-                print "insert into ingredient_map (recipe_id,amount,unit_id,\
-                       ingredient_id,notes) values (%s, %s, %s, %s, %s)" % \
-                       (self.recipe_id, data[0], unit_id, ingredient_id, notes)
-
-                self.cur.execute("insert into ingredient_map (recipe_id,amount,unit_id, ingredient_id,notes) values (%s, %s, %s, %s, %s)", (self.recipe_id, data[0], unit_id, ingredient_id, notes))
-        #-----End ingredient map inserts-----
-
-        #-----Start categories inserts-----
-        categories=self.get_active_categories()
-        for cat in self.new_cat:
-            categories.append(cat)
-        for cat in categories:
-            self.cur.execute("select id from category where category=%s",
-                                (cat,))
-            cat_id=self.cur.fetchone()[0]
-            print 'insert into category_map (id,category_id) values (%s,%s)' % (self.recipe_id, cat_id) 
-            self.cur.execute("insert into category_map (id,category_id) values (%s,%s)",(self.recipe_id, cat_id) )
-        #-----End categories inserts-----
-        #print self.dir_text
-        self.w.hide()
-        self.w.destroy()
-
 class current_recipe(base_recipe_window):
     """A recipe window that fills out based on the info stored in the DB
 
@@ -530,11 +396,11 @@ class current_recipe(base_recipe_window):
         self.cur.execute("""SELECT category_id FROM category_map WHERE recipe_id=%s"""\
                          , (self.recipe_id,))
         cur_cat_ids=self.cur.fetchall()
-        for id in cur_cat_ids:
-            id=id[0]
+        for c_id in cur_cat_ids:
+            c_id=c_id[0]
             self.cur.execute(
               """SELECT category FROM categories WHERE category_id=%s""",
-              (id,))
+              (c_id,))
             cur_category=self.cur.fetchone()[0]
             self.current_values["categories"].append(cur_category)
 
@@ -575,18 +441,15 @@ class current_recipe(base_recipe_window):
                         cb.set_active(True)
     
     def update2(self,widget):
+        """Update the current recipe
+
+        Opens a new cursor, gets the current data checks for differences
+        and then changes the database if nessarry
+        """
+
         self.cur=con.cursor()
         values=self.get_form_data()
-        #print values
-        #print self.current_values
         try:
-            #for key in values:
-            #    print key
-            #    if key in self.current_values.keys():
-            #        if values[key] != self.current_values[key]:
-            #            print "update", key
-            #        else:
-            #            print "not updating", key
             update={}
             update['recipes']=False
             update['ing_map']=False
@@ -607,15 +470,17 @@ class current_recipe(base_recipe_window):
                 self.cur.execute(
                  """UPDATE recipes SET name=%s,description=%s,directions=%s,
                     type=%s,rating=%s WHERE recipe_id=%s""", (values['name']\
-                    ,values['description'],values['directions'],values['type_id']\
-                    ,values['rating'],self.recipe_id))
+                    ,values['description'],values['directions']\
+                    ,values['type_id'],values['rating'],self.recipe_id))
             
             if update['ing_map']:
-                self.cur.execute("""DELETE FROM ingredient_map WHERE recipe_id=%s""",
-                                [self.recipe_id])
+                self.cur.execute("""DELETE FROM ingredient_map WHERE\
+                                    recipe_id=%s""", [self.recipe_id])
                 values['ing_map']=self.build_ing_map_inserts(values['ingredients_list'],self.recipe_id)
                 if len(values['ing_map']) >0:
-                    self.cur.executemany("""INSERT INTO ingredient_map (recipe_id,amount,unit_id,ingredient_id,notes) VALUES (%s,%s,%s,%s,%s)""", values['ing_map'])
+                    self.cur.executemany("""INSERT INTO ingredient_map \
+                        (recipe_id,amount,unit_id,ingredient_id,notes)\
+                        VALUES (%s,%s,%s,%s,%s)""", values['ing_map'])
             if update['cat_map']:
                 cat_del=[x for x in self.current_values['categories'] if not x in values['categories']]
                 cat_add=[x for x in values['categories'] if not x in \
@@ -625,10 +490,11 @@ class current_recipe(base_recipe_window):
                 self.cur.executemany(
                     """INSERT INTO category_map (recipe_id,category_id)\
                        VALUES (%s,%s)""", values['cat_map'])
-                values['cat_map_del']=self.build_cat_map_inserts(cat_del,self.recipe_id)
+                values['cat_map_del']=\
+                    self.build_cat_map_inserts(cat_del,self.recipe_id)
                 if len(values['cat_map_del']) > 0:
-                    self.cur.execute("""DELETE FROM category_map WHERE recipe_id=%s\
-                                    AND category_id=%s""",values['cat_map_del'])
+                    self.cur.execute("""DELETE FROM category_map WHERE\
+                      recipe_id=%s AND category_id=%s""",values['cat_map_del'])
 
         except:
             errors=sys.exc_info()
@@ -661,12 +527,8 @@ class home_window:
         self.b_add_new=gtk.Button("Add new Recipe")
         self.b_add_new.connect("clicked", self.add_clicked)
         self.vbox.add(self.b_add_new)
-        #self.b_show_rid1=gtk.Button("show recipe #11")
-        #self.b_show_rid1.connect("clicked", self.show_recipe)
-        #self.vbox.add(self.b_show_rid1)
         self.window.add(self.vbox)
         self.window.show_all()
-        #gtk.main()
 
     def start_main_loop(self):
         gtk.main()
@@ -676,7 +538,7 @@ class home_window:
         self.search=search_results_window(searchline=self.searchstring)
     def add_clicked(self, widget):
         self.window.hide()
-        add_new_window= add_new_recipe()
+        add_new_window=add_new_recipe()
     def show_recipe(self,widget,s_rid=11):
         recipe=add_new_recipe(recipe_id=s_rid)
     def exit(self,widget):
@@ -734,6 +596,7 @@ if __name__ == '__main__':
                             user=options['database_uid'],\
                             password=options['database_passwd'])
     elif options['database_type']=="mysql":
+        import MySQLdb
         con=MySQLdb.connect(host=options['database_host'],\
                             db=options['database_db'],\
                             user=options['database_uid'],\
