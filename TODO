@@ -1,0 +1,5 @@
+* Add better searching options, list of tags, ingredients, etc
+* Add a gui to manage the config file.
+* Test MYSQL support
+* Get a homepage
+* Add ui elements for cook time and prep time.
