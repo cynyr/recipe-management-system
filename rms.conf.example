@@ -1,0 +1,7 @@
+#An example config file
+#should be self explanatory.
+database_host=localhost
+database_uid=rms
+database_passwd=rmsiscool
+database_db=rms
+database_type=postgresql
