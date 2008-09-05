@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+#A recipe managment system
+#Written by Andrew Frink Andrew.Frink@gmail.com
+#licensed under GPLv2 or later at your option.
+#There isn't a home page yet.
 
 class base_recipe_window:
     """A window and functions to add a new recipe"""
