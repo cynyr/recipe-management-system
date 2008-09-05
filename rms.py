@@ -51,11 +51,16 @@ class base_recipe_window:
         #-----------------------
 
     def do_categories(self):
-        
-        #make some checkboxes
+        """Fills out the area that shows the categories"""
+
+        #get the vbox that will hold all of the categories
         self.vb_cat=self.xml.get_widget('vb_cat')
-        self.cur.execute("""select category from categories order by category""")
+        #get all of the categories
+        self.cur.execute(
+            """SELECT category FROM categories ORDER BY category""")
+        #make a list of the results
         categories=list(self.cur.fetchall())
+        #set the number of categories wide
         self.width=4
         while len(categories):
             self.hb=gtk.HBox(True, 0) #create a hbox
@@ -69,7 +74,7 @@ class base_recipe_window:
                 else:
                     self.cb=gtk.Label("")
                 self.hb.add(self.cb)
-                
+        #make an entry widget and a label and add it to the vbox
         self.e_new_cat=gtk.Entry()
         self.e_new_cat.set_tooltip_text("a comma seperated list of categories")
         self.hb=gtk.HBox(False, 0)
@@ -78,6 +83,7 @@ class base_recipe_window:
         self.hb.add(self.e_new_cat)
         
     def get_active_categories(self):
+        """Returns a list of the names of the currently checked categories"""
         l=[]
         for hbox in self.vb_cat.get_children():
             for cb in hbox.get_children():
@@ -86,6 +92,11 @@ class base_recipe_window:
                         l.append(cb.get_label())
         return l
     def get_new_categories(self):
+        """Return a list of the new categories
+
+        Parse the entry widget text and add them to the DB
+        and return them as a list
+        """
         l=[]
         for cat in [x.strip() for x in self.e_new_cat.get_text().split(",")]:
             if cat != "":
@@ -95,19 +106,22 @@ class base_recipe_window:
         return l
     
     def get_current_categories(self):
+        """returns a list of both the active and the new categories"""
         l=self.get_active_categories()
         l.extend(self.get_new_categories())
         return l
     
     def add_new_categories(self,cats):
-        for cat in cats:
-            self.cur.execute("INSERT INTO categories (category) VALUES (%s)",\
-                                 (cat,))
+        """add_new_categories(list())
+        
+        Adds the list as categories to the DB as categories"""
+        self.cur.executemany("INSERT INTO categories (category) VALUES (%s)",\
+                              [[x] for x in cats])
     def get_tv_text(self,tv):
         """get all the text from a textview
            
            Either look for a widget in the glade file by the name if a string
-           or assume it is a textview type and use that."""
+           or assume it is a textview and use that."""
         if type(tv) == type(""):
             tb=self.xml.get_widget(tv).get_buffer()
         else:
@@ -116,6 +130,10 @@ class base_recipe_window:
         return text
         
     def add_unit(self, unit):
+        """add_unit("unit")
+        
+        Add a new unit to the database with the name unit
+        """
         try:
             self.cur.execute("""INSERT INTO units (unit) VALUES (%s)""",(unit,))
         except:
@@ -125,6 +143,11 @@ class base_recipe_window:
             return True
 
     def get_unit_id(self,unit,add=True):
+        """get_unit_id("unit" add=True)
+        
+        Get the ID of the unit "unit". If add is True, add it to the DB
+        using add_unit("unit") if we can't find it.
+        """
         self.cur.execute("""SELECT unit_id FROM units WHERE unit=%s""", [unit])
         result=self.cur.fetchone()
         if result == None:
@@ -142,6 +165,10 @@ class base_recipe_window:
         return u_id
 
     def add_ingredient(self,ingredient):
+        """add_ingredient("ingredient")
+        
+        Adds the ingredient to the Database.
+        """
         try:
             self.cur.execute(
                 """INSERT INTO ingredients (ingredient) VALUES (%s)""",
@@ -153,6 +180,11 @@ class base_recipe_window:
             return True
 
     def get_ingredent_id(self, ingredient, add=True):
+        """get_ingredient_id("ingredient" add=True)
+
+        Gets the ID of an ingredient matching "ingredient". If add is true,
+        "ingredient" will be added to the database using add_ingredient()
+        """
         self.cur.execute("""SELECT ingredient_id FROM ingredients WHERE ingredient=%s""",
                          (ingredient,))
         result=self.cur.fetchone()
@@ -173,11 +205,28 @@ class base_recipe_window:
         return i_id
     
     def get_type_id(self, type):
+        """get_type("type')
+
+        Get the ID for "type", currently there is no add_type().
+        """
         self.cur.execute("""SELECT type_id FROM types WHERE type=%s""",(type,))
         result=self.cur.fetchone()
         return result[0]
 
     def get_form_data(self):
+        "get_form_data()
+
+        Gets the current values from the recipe_window and returns a dictionary.
+        with the following keys:
+        type                The text form of the type
+        type_id             The Type ID from get_type_id()
+        rating              The int of the rating
+        categories          A list of categories from get_current_categories()
+        directions          The text from the directions textview
+        description         The text from the description textview
+        ingredients_text    The text from the ingredients textview
+        ingredients_list    A list of lists from parse_ingredients()
+        """
         data={}
         #get the name
         data['name']=string.capwords(self.xml.get_widget("e_name").get_text().strip())
@@ -200,7 +249,7 @@ class base_recipe_window:
     def parse_ingredients(self,txt):
         """Parse text and return a list of lists for each line.
 
-        Each line becomes a a list; amount,unit,ingredent,notes. 
+        Each line becomes a a list; _amount,unit,ingredent,notes. 
         If there are no notes, add a empty string to the end. 
         """
         l=[]
@@ -218,12 +267,13 @@ class base_recipe_window:
         return l
         
     def build_ing_map_inserts(self, ing,id):
-        """Build a list of lists one list for each line.
+        """build_ing_map_inserts(ingredients_list,recipe_id)
         
+        Build a list of lists one list for each line.
         Get the various ID's that are needed. Adding units, ingredients
         to the DB as needed.
-        arg[1] is the list returned from parse_ingredients()
-        arg[2] is the id of the recipe
+        ingredients_list is the list returned from parse_ingredients()
+        recipe_id is the id of the recipe
         """
         #ing mappings
         #0 amount
@@ -241,7 +291,10 @@ class base_recipe_window:
         return l   
         
     def build_cat_map_inserts(self,cats,id):
-        """build a list of lists to insert categories"""
+        """build_cat_map_inserts(categories,recipe_id)
+        
+        build a list of lists to insert categories
+        """
         l=[]
         for cat in cats:
             self.cur.execute("""SELECT category_id FROM categories WHERE category=%s""",
@@ -260,20 +313,18 @@ class add_new_recipe(base_recipe_window):
     """A window building off of the base window to add a new recipe"""
     def __init__(self):
         base_recipe_window.__init__(self)
-
         self.xml.signal_connect('on_submit_clicked' , self.submit2)
 
     def submit2(self,widget):
         """ Add a recipe to the Database
 
         This function adds a recipie to the database. Using the helper
-        functions defined in base_recipe_window"""
+        functions defined in base_recipe_window
+        """
 
         self.cur=con.cursor()
         values=self.get_form_data()
-        print values
 
-        #start a transaction. better work on the engine i'm using...
         try:
             #Do all the inserts here, so that it is atomic.
             #Really calling anything that may call something
@@ -326,8 +377,9 @@ class current_recipe(base_recipe_window):
     Needs to be passed a recipe ID number and"""
 
     def __init__(self,recipe_id=5):
-        """An extentension of the recipe window"""#{{{2
+        """An extentension of the recipe window"""
 
+        #store away the recipe_id passed in
         self.recipe_id=recipe_id
         
         #call the base init function
@@ -355,6 +407,11 @@ class current_recipe(base_recipe_window):
         self.ce.set_active(position)
 
     def get_type(self, type):
+        """get_type("type"| type_id)
+
+        get the type or type_id. If the argument is all numbers it is
+        considered an ID otherwise it is considered a type.
+        """
         if str(type).isdigit():
             self.cur.execute("""SELECT type FROM types WHERE type_id=%s""",
                                 (type,))
@@ -364,6 +421,24 @@ class current_recipe(base_recipe_window):
         return self.cur.fetchone()[0]
         
     def get_current_data(self):
+        """get_current_data()
+
+        Retrive the current data for self.recipe_id from the database.
+        inserts it into a dictionary with the following keys:
+        name        the name
+        type_id     the type ID number
+        type        the type
+        rating      the rating
+        directions  the text for the directions
+        description the text for the description
+        ingredients the text for the ingredients
+        categories  the list of the categorie       type        the type
+        rating      the rating
+        directions  the text for the directions
+        description the text for the description
+        ingredients the text for the ingredients
+        categories  the list of the categories
+        """
         self.cur.execute("""Select name,type,rating,directions,description from recipes where recipe_id=%s""", (self.recipe_id,))
         self.info=self.cur.fetchall()[0]
         #print self.info
@@ -512,43 +587,61 @@ class home_window:
     """The home window that allows basic searching and adding of recipies"""
     
     def __init__ (self):
+        """create the home window
+
+        This is the main window and therefore takes no options.
+        """
+        #make a window
         self.window=gtk.Window(gtk.WINDOW_TOPLEVEL)
+        #hook the destroy event
         self.window.connect("destroy", self.exit)
+        #make an entry widget and a vbox and an hbox
         self.search_entry=gtk.Entry()
         self.vbox=gtk.VBox()
         self.hbox=gtk.HBox()
+        #make a label
         self.label=gtk.Label("Enter name to search for here: ")
+        #add the label and entry to the hbox
         self.hbox.add(self.label)
         self.hbox.add(self.search_entry)
+        #add the hbox to the vbox
         self.vbox.add(self.hbox)
+        #make a submit button, hook it's clicked event and add it to the vbox
         self.b_submit=gtk.Button("Submit")
         self.b_submit.connect("clicked", self.submit_clicked)
         self.vbox.add(self.b_submit)
+        #make an add new button hook clicked and add it to the vbox
         self.b_add_new=gtk.Button("Add new Recipe")
         self.b_add_new.connect("clicked", self.add_clicked)
         self.vbox.add(self.b_add_new)
+        #add the box to the window and show everything.
         self.window.add(self.vbox)
         self.window.show_all()
 
     def start_main_loop(self):
+        """call gtk.main()"""
         gtk.main()
     def submit_clicked(self,widget):
+        """open the search results window"""
+        #get the text in the entry box
         self.searchstring=self.search_entry.get_text()
-        print self.searchstring
+        #print self.searchstring
+        #open the results window and give it the text from the entry
         self.search=search_results_window(searchline=self.searchstring)
+        self.window.hide()
     def add_clicked(self, widget):
+        """open the add new window and hide myself"""
         self.window.hide()
         add_new_window=add_new_recipe()
-    def show_recipe(self,widget,s_rid=11):
-        recipe=add_new_recipe(recipe_id=s_rid)
     def exit(self,widget):
+        """call gtk.exit()"""
         gtk.main_quit()
 
 class search_results_window:
     """A results window for a searching for a recipe"""
 
     def __init__ (self, searchline=""):
-        main_window.window.hide()
+        """Search for the name like searchstring"""
         self.window=gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.connect("destroy", self.exit)
         self.vbox=gtk.VBox(True,0)
