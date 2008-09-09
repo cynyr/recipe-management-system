@@ -642,6 +642,18 @@ class home_window:
         self.search_entry=gtk.Entry()
         self.vbox=gtk.VBox()
         self.hbox=gtk.HBox()
+        self.menu=gtk.MenuBar()
+        self.vbox.add(self.menu)
+        for label in ["File","Edit"]:
+            self.mi=gtk.MenuItem(label)
+            #self.mi.connect("activate", self.test, label)
+            self.menu.add(self.mi)
+            if label == "Edit":
+                self.mi2=gtk.Menu()
+                self.pref=gtk.MenuItem("Preferances")
+                self.pref.connect("activate", self.test, "Preferances")
+                self.mi2.add(self.pref)
+                self.mi.set_submenu(self.mi2)
         #make a label
         self.label=gtk.Label("Enter name to search for here: ")
         #add the label and entry to the hbox
@@ -661,6 +673,18 @@ class home_window:
         self.window.add(self.vbox)
         self.window.show_all()
 
+    def test(self,widget,label):
+        if label == "Preferances":
+            cfile=os.environ['HOME']+".config/rms/rms.conf"
+            cw=rms_config.config_window(self.window,options,cfile)
+            cw.run()
+            print "getting options"
+            get_options()
+            print options
+            get_db_connection()
+            
+        print widget,label
+
     def start_main_loop(self):
         """call gtk.main()"""
         gtk.main()
@@ -677,7 +701,7 @@ class home_window:
         self.window.hide()
         add_new_window=add_new_recipe()
     def exit(self,widget):
-        """call gtk.exit()"""
+        """call gtk.main_quit()"""
         gtk.main_quit()
 
 class search_results_window:
@@ -711,19 +735,7 @@ class search_results_window:
     def exit(self, widget):
         main_window.window.show()
     
-if __name__ == '__main__':
-    import pygtk,gtk,gtk.glade,gobject,os,string,sys,traceback
-    from config_parse import ParseConfigFile
-    default_options=dict(
-        database_host="localhost",
-        database_uid="rms",
-        database_passwd="rmsiscool",
-        database_db="rms",
-        database_type="postgres"
-    )
-    paths=["/etc/rms/rms.conf","/home/cynyr/.config/rms/rms.conf",]
-    options=ParseConfigFile(paths,default_options)
-    
+def get_db_connection():
     if options['database_type']=="postgres":
         import pgdb
         con=pgdb.connect(host=options['database_host'],\
@@ -736,5 +748,25 @@ if __name__ == '__main__':
                             db=options['database_db'],\
                             user=options['database_uid'],\
                             passwd=options['database_passwd'])
+def get_options():
+    from config_parse import ParseConfigFile
+    default_options=dict(
+        database_host="localhost",
+        database_uid="rms",
+        database_passwd="rmsiscool",
+        database_db="rms",
+        database_type="postgres"
+    )
+    paths=["/etc/rms/rms.conf",os.environ['HOME']+".config/rms/rms.conf",]
+    global options
+    options=ParseConfigFile(paths,default_options)
+
+if __name__ == '__main__':
+    import pygtk,gtk,gtk.glade,gobject,os,string,sys,traceback,rms_config
+
+    get_options()
+    print options
+    get_db_connection()
+
     main_window=home_window()
     main_window.start_main_loop()

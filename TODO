@@ -1,6 +1,10 @@
 * Add better searching options, list of tags, ingredients, etc
-* Add a gui to manage the config file.
 * Test MYSQL support
 * Get a homepage
 * make the ingredients parser smarter so lines like "2 12oz cans diced tomatos"
   parse nicely
+* Add the ability to plan a week of meals
+* Add a web interface
+* Add printing support
+* Add support for making a shopping list based on ingredients for 1 or more 
+  recipes
