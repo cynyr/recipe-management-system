@@ -1,10 +1,15 @@
 * Add better searching options, list of tags, ingredients, etc
 * Test MYSQL support
 * Get a homepage
+* Add ui elements for cook time and prep time.
 * make the ingredients parser smarter so lines like "2 12oz cans diced tomatos"
+<<<<<<< HEAD:TODO
   parse nicely
 * Add the ability to plan a week of meals
 * Add a web interface
 * Add printing support
 * Add support for making a shopping list based on ingredients for 1 or more 
   recipes
+=======
+    parse nicely
+>>>>>>> b2ae1b3... added support for preperation times, cooking times, both in the UI and the backend. Also rearanged the look of the UI a bit to make it have better flow:TODO

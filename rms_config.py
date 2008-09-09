@@ -13,8 +13,17 @@ class config_window():
                             (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
                          )
+<<<<<<< HEAD:rms_config.py
         keys=["database_passwd","database_host","database_uid",
                   "database_type","database_db", ]
+=======
+        #self.w.connect("destroy", self.exit)
+        #self.vbox=gtk.VBox(0,True)
+        #self.w.add(self.vbox)
+        keys=["database_passwd","database_host","database_uid",
+                  "database_type","database_db",
+                 ]
+>>>>>>> a9ea34c1751fcff65f78b658c7b9e6761601da33:rms_config.py
 
         for x in keys:
             self.hb=gtk.HBox(2,True)
@@ -46,6 +55,10 @@ class config_window():
                 l.append(c[0].get_label()+"="+c[1].get_text())
         text="\n".join(l)
         header="#Config file auto generated\n"
+<<<<<<< HEAD:rms_config.py
+=======
+        #print "==========\n",header,text
+>>>>>>> a9ea34c1751fcff65f78b658c7b9e6761601da33:rms_config.py
         cf=open(self.config_file, "w")
         cf.write(header+text)
         cf.close()
@@ -54,6 +67,11 @@ class config_window():
     def run(self,*args):
         self.w.run()
 
+<<<<<<< HEAD:rms_config.py
+=======
+    def cancel(self,*args):
+        self.exit()
+>>>>>>> a9ea34c1751fcff65f78b658c7b9e6761601da33:rms_config.py
     def exit(self,*args):
         self.w.destroy()
 

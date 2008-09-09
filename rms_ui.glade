@@ -10,7 +10,7 @@
             <widget class="GtkTable" id="table1">
                 <property name="border_width">2</property>
                 <property name="n_columns">3</property>
-                <property name="n_rows">6</property>
+                <property name="n_rows">5</property>
                 <property name="visible">True</property>
                 <child>
                     <widget class="GtkFrame" id="f_name">
@@ -32,118 +32,10 @@
                     </packing>
                 </child>
                 <child>
-                    <widget class="GtkFrame" id="f_desc">
-                        <property name="label" context="yes" translatable="yes">Description</property>
-                        <property name="shadow">etched-out</property>
-                        <property name="shadow_type">etched-out</property>
-                        <property name="visible">True</property>
-                        <child>
-                            <widget class="GtkScrolledWindow" id="scrolledwindow3">
-                                <property name="hscrollbar_policy">automatic</property>
-                                <property name="visible">True</property>
-                                <property name="vscrollbar_policy">automatic</property>
-                                <child>
-                                    <widget class="GtkTextView" id="tv_desc">
-                                        <property name="height_request">48</property>
-                                        <property name="is_focus">True</property>
-                                        <property name="visible">True</property>
-                                        <property name="wrap_mode">word-char</property>
-                                    </widget>
-                                </child>
-                            </widget>
-                        </child>
-                    </widget>
-                    <packing>
-                        <property name="bottom_attach">2</property>
-                        <property name="right_attach">3</property>
-                        <property name="top_attach">1</property>
-                    </packing>
-                </child>
-                <child>
-                    <widget class="GtkHBox" id="hbox4">
-                        <property name="homogeneous">True</property>
-                        <property name="visible">True</property>
-                        <child>
-                            <widget class="GtkFrame" id="f_ptime">
-                                <property name="label" context="yes" translatable="yes">Preperation Time HH:MM</property>
-                                <property name="shadow">etched-out</property>
-                                <property name="shadow_type">etched-out</property>
-                                <property name="visible">True</property>
-                                <child>
-                                    <widget class="GtkHBox" id="hbox5">
-                                        <property name="visible">True</property>
-                                        <child>
-                                            <widget class="GtkSpinButton" id="sb_ptime_hours">
-                                                <property name="adjustment">0 0 24 1 10 0</property>
-                                                <property name="is_focus">True</property>
-                                                <property name="text" context="yes" translatable="yes">0</property>
-                                                <property name="visible">True</property>
-                                            </widget>
-                                        </child>
-                                        <child>
-                                            <widget class="GtkSpinButton" id="sb_ptime_minutes">
-                                                <property name="adjustment">0 0 59 1 10 0</property>
-                                                <property name="climb_rate">1.0</property>
-                                                <property name="text" context="yes" translatable="yes">0</property>
-                                                <property name="visible">True</property>
-                                            </widget>
-                                            <packing>
-                                                <property name="position">1</property>
-                                            </packing>
-                                        </child>
-                                    </widget>
-                                </child>
-                            </widget>
-                        </child>
-                        <child>
-                            <widget class="GtkFrame" id="f_ctime">
-                                <property name="label" context="yes" translatable="yes">Cooking Time HH:MM</property>
-                                <property name="shadow">etched-out</property>
-                                <property name="shadow_type">etched-out</property>
-                                <property name="visible">True</property>
-                                <child>
-                                    <widget class="GtkHBox" id="hbox6">
-                                        <property name="visible">True</property>
-                                        <child>
-                                            <widget class="GtkSpinButton" id="sb_ctime_hours">
-                                                <property name="adjustment">0 0 24 1 10 0</property>
-                                                <property name="climb_rate">1.0</property>
-                                                <property name="text" context="yes" translatable="yes">0</property>
-                                                <property name="visible">True</property>
-                                            </widget>
-                                        </child>
-                                        <child>
-                                            <widget class="GtkSpinButton" id="sb_ctime_minutes">
-                                                <property name="adjustment">0 0 59 1 10 0</property>
-                                                <property name="climb_rate">1.0</property>
-                                                <property name="text" context="yes" translatable="yes">0</property>
-                                                <property name="visible">True</property>
-                                            </widget>
-                                            <packing>
-                                                <property name="position">1</property>
-                                            </packing>
-                                        </child>
-                                    </widget>
-                                </child>
-                            </widget>
-                            <packing>
-                                <property name="position">1</property>
-                            </packing>
-                        </child>
-                    </widget>
-                    <packing>
-                        <property name="bottom_attach">3</property>
-                        <property name="right_attach">3</property>
-                        <property name="top_attach">2</property>
-                        <property name="x_padding">2</property>
-                        <property name="y_padding">2</property>
-                    </packing>
-                </child>
-                <child>
                     <widget class="GtkFrame" id="f_cat">
                         <property name="label" context="yes" translatable="yes">Categories</property>
-                        <property name="shadow">etched-out</property>
-                        <property name="shadow_type">etched-out</property>
+                        <property name="shadow">none</property>
+                        <property name="shadow_type">none</property>
                         <property name="visible">True</property>
                         <child>
                             <widget class="GtkVBox" id="vb_cat">
@@ -156,9 +48,9 @@
                         </child>
                     </widget>
                     <packing>
-                        <property name="bottom_attach">4</property>
+                        <property name="bottom_attach">2</property>
                         <property name="right_attach">3</property>
-                        <property name="top_attach">3</property>
+                        <property name="top_attach">1</property>
                     </packing>
                 </child>
                 <child>
@@ -170,8 +62,8 @@
                                 <child>
                                     <widget class="GtkFrame" id="f_ing">
                                         <property name="label" context="yes" translatable="yes">Ingredents</property>
-                                        <property name="shadow">etched-out</property>
-                                        <property name="shadow_type">etched-out</property>
+                                        <property name="shadow">none</property>
+                                        <property name="shadow_type">none</property>
                                         <property name="visible">True</property>
                                         <child>
                                             <widget class="GtkHBox" id="hbox3">
@@ -210,8 +102,8 @@ ex: "3/4, cup, mint leaves, finely chopped"</property>
                         <child>
                             <widget class="GtkFrame" id="f_dir">
                                 <property name="label" context="yes" translatable="yes">Directions</property>
-                                <property name="shadow">etched-out</property>
-                                <property name="shadow_type">etched-out</property>
+                                <property name="shadow">none</property>
+                                <property name="shadow_type">none</property>
                                 <property name="visible">True</property>
                                 <child>
                                     <widget class="GtkHBox" id="hbox2">
@@ -241,9 +133,39 @@ ex: "3/4, cup, mint leaves, finely chopped"</property>
                         </child>
                     </widget>
                     <packing>
-                        <property name="bottom_attach">5</property>
+                        <property name="bottom_attach">3</property>
                         <property name="right_attach">3</property>
-                        <property name="top_attach">4</property>
+                        <property name="top_attach">2</property>
+                        <property name="x_padding">2</property>
+                        <property name="y_padding">2</property>
+                    </packing>
+                </child>
+                <child>
+                    <widget class="GtkFrame" id="f_desc">
+                        <property name="label" context="yes" translatable="yes">Description</property>
+                        <property name="shadow">none</property>
+                        <property name="shadow_type">none</property>
+                        <property name="visible">True</property>
+                        <child>
+                            <widget class="GtkScrolledWindow" id="scrolledwindow3">
+                                <property name="hscrollbar_policy">automatic</property>
+                                <property name="visible">True</property>
+                                <property name="vscrollbar_policy">automatic</property>
+                                <child>
+                                    <widget class="GtkTextView" id="tv_desc">
+                                        <property name="height_request">48</property>
+                                        <property name="is_focus">True</property>
+                                        <property name="visible">True</property>
+                                        <property name="wrap_mode">word-char</property>
+                                    </widget>
+                                </child>
+                            </widget>
+                        </child>
+                    </widget>
+                    <packing>
+                        <property name="bottom_attach">4</property>
+                        <property name="right_attach">3</property>
+                        <property name="top_attach">3</property>
                     </packing>
                 </child>
                 <child>
@@ -254,9 +176,9 @@ ex: "3/4, cup, mint leaves, finely chopped"</property>
                         <signal handler="on_submit_clicked" name="clicked"/>
                     </widget>
                     <packing>
-                        <property name="bottom_attach">6</property>
+                        <property name="bottom_attach">5</property>
                         <property name="right_attach">3</property>
-                        <property name="top_attach">5</property>
+                        <property name="top_attach">4</property>
                     </packing>
                 </child>
                 <child>

@@ -218,7 +218,7 @@ class base_recipe_window:
         return result[0]
 
     def get_form_data(self):
-        """get_form_data()
+        "get_form_data()
 
         Gets the current values from the recipe_window and returns a dictionary.
         with the following keys:
@@ -230,8 +230,6 @@ class base_recipe_window:
         description         The text from the description textview
         ingredients_text    The text from the ingredients textview
         ingredients_list    A list of lists from parse_ingredients()
-        prep_time           'hh:mm' preperation time
-        cook_time           'hh:mm' cooking time
         """
         data={}
         #get the name
@@ -249,14 +247,7 @@ class base_recipe_window:
         data['description']=self.get_tv_text("tv_desc")
         #get ingredents text
         data['ingredients_text']=self.get_tv_text("tv_ing").strip('\n')
-        data['ingredients_list']=\
-            self.parse_ingredients(data['ingredients_text'])
-        ctime_hours=self.xml.get_widget("sb_ctime_hours").get_value_as_int()
-        ctime_min=self.xml.get_widget("sb_ctime_minutes").get_value_as_int()
-        data['cook_time']=str(ctime_hours) + ':' + str(ctime_min)
-        ptime_hours=self.xml.get_widget("sb_ptime_hours").get_value_as_int()
-        ptime_min=self.xml.get_widget("sb_ptime_minutes").get_value_as_int()
-        data['prep_time']=str(ptime_hours) + ':' + str(ptime_min)
+        data['ingredients_list']=self.parse_ingredients(data['ingredients_text'])
         return data
 
     def parse_ingredients(self,txt):
@@ -344,7 +335,7 @@ class add_new_recipe(base_recipe_window):
             #to insert into the DB needs to be done inside of here...
             # I MEAN IT!
 
-            self.cur.execute( """INSERT INTO recipes (name,description,directions,type,rating,prep_time,cook_time) VALUES (%s,%s,%s,%s,%s,%s,%s)""",(values['name'],values['description'],values['directions'],values['type_id'],values['rating'],values['prep_time'],values['cook_time']))
+            self.cur.execute( """INSERT INTO recipes (name,description,directions,type,rating,prep_time,cook_time) VALUES (%s,%s,%s,%s,%s,%s,%s)""",(values['name'],values['description'],values['directions'],values['type_id'],values['rating'],"00:10","00:30"))
             self.cur.execute("""SELECT recipe_id FROM recipes WHERE name=%s""",
                              (values['name'],))
             ids=self.cur.fetchall()
@@ -445,15 +436,14 @@ class current_recipe(base_recipe_window):
         directions  the text for the directions
         description the text for the description
         ingredients the text for the ingredients
-        categories  the list of the categories
+        categories  the list of the categorie       type        the type
         rating      the rating
         directions  the text for the directions
         description the text for the description
         ingredients the text for the ingredients
-        prep_time   'hh:mm' preperation time
-        cook_time   'hh:mm' cooking time
+        categories  the list of the categories
         """
-        self.cur.execute("""Select name,type,rating,directions,description,prep_time,cook_time from recipes where recipe_id=%s""", (self.recipe_id,))
+        self.cur.execute("""Select name,type,rating,directions,description from recipes where recipe_id=%s""", (self.recipe_id,))
         self.info=self.cur.fetchall()[0]
         #print self.info
         self.current_values={}
@@ -464,8 +454,6 @@ class current_recipe(base_recipe_window):
         self.current_values['rating']=int(self.info[2])
         self.current_values['directions']=self.info[3]
         self.current_values['description']=self.info[4]
-        self.current_values['prep_time']=self.info[5]
-        self.current_values['cook_time']=self.info[6]
         self.ingredients_strings=[]
         self.cur.execute("""SELECT amount,unit_id,ingredient_id,notes from ingredient_map where recipe_id=%s""",(self.recipe_id,))
         self.cur_ing=self.cur.fetchall()
@@ -494,7 +482,6 @@ class current_recipe(base_recipe_window):
               (c_id,))
             cur_category=self.cur.fetchone()[0]
             self.current_values["categories"].append(cur_category)
-        print self.current_values
 
     def fill_out_recipe(self):
         """Fill out the recipe window
@@ -523,27 +510,6 @@ class current_recipe(base_recipe_window):
         self.sb_rating=self.xml.get_widget("sb_rating")
         self.sb_rating.set_value(self.current_values['rating'])
         self.sb_rating.update()
-        #setting the prep hours
-        self.sb_ptime_hours=self.xml.get_widget("sb_ptime_hours")
-        ptime_hours=int(self.current_values['prep_time'].split(':')[0])
-        self.sb_ptime_hours.set_value(ptime_hours)
-        self.sb_ptime_hours.update()
-        #setting the prep minutes
-        self.sb_ptime_min=self.xml.get_widget("sb_ptime_minutes")
-        ptime_min=int(self.current_values['prep_time'].split(':')[1])
-        self.sb_ptime_min.set_value(ptime_min)
-        self.sb_ptime_min.update()
-        #setting the cook hours
-        self.sb_ctime_hours=self.xml.get_widget("sb_ctime_hours")
-        ctime_hours=int(self.current_values['cook_time'].split(':')[0])
-        self.sb_ctime_hours.set_value(ptime_hours)
-        self.sb_ctime_hours.update()
-        #setting the cook minutes
-        self.sb_ctime_hours=self.xml.get_widget("sb_ctime_minutes")
-        ctime_min=int(self.current_values['cook_time'].split(':')[1])
-        self.sb_ctime_hours.set_value(ctime_min)
-        self.sb_ctime_hours.update()
-        
         #set the type
         self.set_type()
         
@@ -567,10 +533,7 @@ class current_recipe(base_recipe_window):
             update['recipes']=False
             update['ing_map']=False
             update['cat_map']=False
-            keys=["name","type","directions","description","rating",
-                  "prep_time","cook_time"
-                 ]
-            for key in keys:
+            for key in ["name","type","directions","description","rating"]:
                 if values[key] != self.current_values[key]:
                     update['recipes']=True
 
@@ -585,11 +548,9 @@ class current_recipe(base_recipe_window):
             if update['recipes']:
                 self.cur.execute(
                  """UPDATE recipes SET name=%s,description=%s,directions=%s,
-                    type=%s,rating=%s,prep_time=%s,cook_time=%s
-                    WHERE recipe_id=%s""",\
-                    (values['name'],values['description'],values['directions']\
-                    ,values['type_id'],values['rating'],values['prep_time']\
-                    ,values['cook_time'],self.recipe_id))
+                    type=%s,rating=%s WHERE recipe_id=%s""", (values['name']\
+                    ,values['description'],values['directions']\
+                    ,values['type_id'],values['rating'],self.recipe_id))
             
             if update['ing_map']:
                 self.cur.execute("""DELETE FROM ingredient_map WHERE\
@@ -716,7 +677,8 @@ class search_results_window:
 
         self.cur=con.cursor()
         searchline="%" + searchline + "%"
-        self.cur.execute("""SELECT recipe_id,name,description FROM recipes WHERE name LIKE %s""", (searchline,))
+        self.cur.execute("""SELECT recipe_id,name,description FROM recipes WHERE name LIKE %s""",\
+                         (searchline,))
         results=self.cur.fetchall()
         for button_data in results:
             self.hbox=gtk.HBox(True,0)
