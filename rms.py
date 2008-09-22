@@ -1,10 +1,64 @@
 #!/usr/bin/env python
-#A recipe managment system
-#Written by Andrew Frink Andrew.Frink@gmail.com
-#licensed under GPLv2 or later at your option.
-#There isn't a home page yet.
+"""A recipe managment system
+Written by Andrew Frink rms.afrink@gmail.com
+licensed under GPLv2 or later at your option.
+There isn't a home page yet.
+"""
 
-class base_recipe_window:
+class RecipeData:
+
+    """
+    name                the name
+    type                The text form of the type
+    type_id             The Type ID from get_type_id()
+    rating              The int of the rating
+    categories          A list of categories from get_current_categories()
+    directions          The text from the directions textview
+    description         The text from the description textview
+    ingredients_text    The text from the ingredients textview
+    ingredients_list    A list of lists from parse_ingredients() 
+    """
+    
+    def __init__(self, *args,**keywords):
+        keys=keywords.keys()
+        if "name" in keys:
+            self.name=keywords['name']
+        else:
+            self.name=None
+        if "type" in keys:
+            self.type=keywords['type']
+        else:
+            self.type=None
+        if "type_id" in keys:
+            self.type_id=keywords['type_id']
+        else:
+            self.type_id=None
+        if "rating" in keys:
+            self.rating=keywords['rating']
+        else:
+            self.rating=None
+        if "categories" in keys:
+            self.categories=keywords['categories']
+        else:
+            self.categories=None
+        if "directions" in keys:
+            self.directions=keywords['directions']
+        else:
+            self.directions=None
+        if "description" in keys:
+            self.description=keywords['description']
+        else:
+            self.description=None
+        if "ingredients_text" in keys:
+            self.ingredients_text=keywords['ingredients_text']
+        else:
+            self.ingredients_text=None
+        if "ingredients_list" in keys:
+            self.ingredients_list=keywords['ingredients_list']
+        else:
+            self.ingredients_list=None
+
+class BaseRecipeWindow:
     """A window and functions to add a new recipe"""
 
     def __init__(self):
@@ -218,10 +272,10 @@ class base_recipe_window:
         return result[0]
 
     def get_form_data(self):
-        "get_form_data()
+        """get_form_data()
 
-        Gets the current values from the recipe_window and returns a dictionary.
-        with the following keys:
+        Gets the current values from the recipe_window and returns a RecipeData
+        object with the following attrs:
         type                The text form of the type
         type_id             The Type ID from get_type_id()
         rating              The int of the rating
@@ -231,23 +285,23 @@ class base_recipe_window:
         ingredients_text    The text from the ingredients textview
         ingredients_list    A list of lists from parse_ingredients()
         """
-        data={}
+        data=RecipeData()
         #get the name
-        data['name']=string.capwords(self.xml.get_widget("e_name").get_text().strip())
+        data.name=string.capwords(self.xml.get_widget("e_name").get_text().strip())
         #get the type
-        data['type']=self.xml.get_widget("ce_types").get_active_text()
-        data['type_id']=self.get_type_id(data['type'])
+        data.type=self.xml.get_widget("ce_types").get_active_text()
+        data.type_id=self.get_type_id(data.type)
         #get the rating
-        data['rating']=self.xml.get_widget("sb_rating").get_value_as_int()
+        data.rating=self.xml.get_widget("sb_rating").get_value_as_int()
         #get categories
-        data['categories']=self.get_current_categories()
+        data.categories=self.get_current_categories()
         #get directions text
-        data['directions']=self.get_tv_text("tv_dir")
+        data.directions=self.get_tv_text("tv_dir")
         #get description text
-        data['description']=self.get_tv_text("tv_desc")
+        data.description=self.get_tv_text("tv_desc")
         #get ingredents text
-        data['ingredients_text']=self.get_tv_text("tv_ing").strip('\n')
-        data['ingredients_list']=self.parse_ingredients(data['ingredients_text'])
+        data.ingredients_text=self.get_tv_text("tv_ing").strip('\n')
+        data.ingredients_list=self.parse_ingredients(data.ingredients_text)
         return data
 
     def parse_ingredients(self,txt):
@@ -313,17 +367,17 @@ class base_recipe_window:
         self.w.destroy()
         main_window.window.show()
 
-class add_new_recipe(base_recipe_window):
+class add_new_recipe(BaseRecipeWindow):
     """A window building off of the base window to add a new recipe"""
     def __init__(self):
-        base_recipe_window.__init__(self)
+        BaseRecipeWindow.__init__(self)
         self.xml.signal_connect('on_submit_clicked' , self.submit2)
 
     def submit2(self,widget):
         """ Add a recipe to the Database
 
         This function adds a recipie to the database. Using the helper
-        functions defined in base_recipe_window
+        functions defined in BaseRecipeWindow
         """
 
         self.cur=con.cursor()
@@ -335,26 +389,24 @@ class add_new_recipe(base_recipe_window):
             #to insert into the DB needs to be done inside of here...
             # I MEAN IT!
 
-            self.cur.execute( """INSERT INTO recipes (name,description,directions,type,rating,prep_time,cook_time) VALUES (%s,%s,%s,%s,%s,%s,%s)""",(values['name'],values['description'],values['directions'],values['type_id'],values['rating'],"00:10","00:30"))
+            self.cur.execute( """INSERT INTO recipes (name,description,directions,type,rating,prep_time,cook_time) VALUES (%s,%s,%s,%s,%s,%s,%s)""",(values.name,values.description,values.directions,values.type_id,values.rating,"00:10","00:30"))
             self.cur.execute("""SELECT recipe_id FROM recipes WHERE name=%s""",
-                             (values['name'],))
+                             (values.name,))
             ids=self.cur.fetchall()
-            values['recipe_id']=ids[-1][0]
+            values.recipe_id=ids[-1][0]
 
-            values['ing_map']=self.build_ing_map_inserts(
-                                values['ingredients_list'],
-                                values['recipe_id'])
-            print values['ing_map']
+            values.ing_map=self.build_ing_map_inserts(
+                                values.ingredients_list,
+                                values.recipe_id)
+            print values.ing_map
             self.cur.executemany("""INSERT INTO ingredient_map (recipe_id,amount,unit_id,ingredient_id,notes) VALUES (%s,%s,%s,%s,%s)""",
-                                    values['ing_map'])
-            values['cat_map']=self.build_cat_map_inserts(
-                                values['categories'],
-                                values['recipe_id'])
-            print values['cat_map']
-            self.cur.executemany("""INSERT INTO category_map (recipe_id,category_id) VALUES (%s,%s)""",
-                                    values['cat_map'])
+                                    values.ing_map)
+            values.cat_map=self.build_cat_map_inserts(
+                                values.categories,
+                                values.recipe_id)
+            print values.cat_map
+            self.cur.executemany("""INSERT INTO category_map (recipe_id,category_id) VALUES (%s,%s)""",values.cat_map)
 
-    
             print values
 
         except:
@@ -375,19 +427,19 @@ class add_new_recipe(base_recipe_window):
             self.cur.close()
             self.exit("done")
         
-class current_recipe(base_recipe_window):
+class current_recipe(BaseRecipeWindow):
     """A recipe window that fills out based on the info stored in the DB
 
     Needs to be passed a recipe ID number and"""
 
     def __init__(self,recipe_id=5):
-        """An extentension of the recipe window"""
+       """An extentension of the recipe window"""
 
         #store away the recipe_id passed in
         self.recipe_id=recipe_id
         
         #call the base init function
-        base_recipe_window.__init__(self)
+        BaseRecipeWindow.__init__(self)
         
         #make the submit button a update button
         self.b_update=self.xml.get_widget("b_submit")
@@ -407,7 +459,7 @@ class current_recipe(base_recipe_window):
         """Set the list to show the correct type"""
         self.ce = self.xml.get_widget("ce_types")
         t_list=[x[0] for x in self.ce.get_model()]
-        position=t_list.index(self.current_values['type'])
+        position=t_list.index(self.current_values.type)
         self.ce.set_active(position)
 
     def get_type(self, type):
@@ -437,23 +489,19 @@ class current_recipe(base_recipe_window):
         description the text for the description
         ingredients the text for the ingredients
         categories  the list of the categorie       type        the type
-        rating      the rating
-        directions  the text for the directions
-        description the text for the description
-        ingredients the text for the ingredients
-        categories  the list of the categories
         """
+
         self.cur.execute("""Select name,type,rating,directions,description from recipes where recipe_id=%s""", (self.recipe_id,))
         self.info=self.cur.fetchall()[0]
         #print self.info
-        self.current_values={}
-        self.current_values['name']=self.info[0]
-        self.current_values['type_id']=self.info[1]
-        self.current_values['type']=self.get_type(
-                                     self.current_values['type_id'])
-        self.current_values['rating']=int(self.info[2])
-        self.current_values['directions']=self.info[3]
-        self.current_values['description']=self.info[4]
+        self.current_values=RecipeData()
+        self.current_values.name=self.info[0]
+        self.current_values.type_id=self.info[1]
+        self.current_values.type=self.get_type(
+                                     self.current_values.type_id)
+        self.current_values.rating=int(self.info[2])
+        self.current_values.directions=self.info[3]
+        self.current_values.description=self.info[4]
         self.ingredients_strings=[]
         self.cur.execute("""SELECT amount,unit_id,ingredient_id,notes from ingredient_map where recipe_id=%s""",(self.recipe_id,))
         self.cur_ing=self.cur.fetchall()
@@ -470,8 +518,8 @@ class current_recipe(base_recipe_window):
             self.ingredients_strings.append(
               ",".join([x for x in [cur_ing_line[0],unit_name,ingredient_name,\
               cur_ing_line[3]]if x != ""])+"\n")
-        self.current_values["ingredients"]="".join(self.ingredients_strings)
-        self.current_values["categories"]=[]
+        self.current_values.ingredients="".join(self.ingredients_strings)
+        self.current_values.categories=[]
         self.cur.execute("""SELECT category_id FROM category_map WHERE recipe_id=%s"""\
                          , (self.recipe_id,))
         cur_cat_ids=self.cur.fetchall()
@@ -481,42 +529,43 @@ class current_recipe(base_recipe_window):
               """SELECT category FROM categories WHERE category_id=%s""",
               (c_id,))
             cur_category=self.cur.fetchone()[0]
-            self.current_values["categories"].append(cur_category)
+            self.current_values.categories.append(cur_category)
 
     def fill_out_recipe(self):
         """Fill out the recipe window
         
         This function fills out the base recipe window with data from 
         the database gotten by calling the get_current_data() function.
-        Must be called after both base_recipe_window.__init__ and 
+        Must be called after both BaseRecipeWindow.__init__ and 
         get_current_data(). 
         """
 
         #set the name field to the name
-        self.xml.get_widget("e_name").set_text(self.current_values['name'])
+        self.xml.get_widget("e_name").set_text(self.current_values.name)
         #setting the ingredients textview string
         self.tv_ing=self.xml.get_widget("tv_ing")
         self.tb_ing=self.tv_ing.get_buffer()
-        self.tb_ing.set_text(self.current_values["ingredients"])
+        self.tb_ing.set_text(self.current_values.ingredients)
         #setting the directions textview string
         self.tv_dir=self.xml.get_widget("tv_dir")
         self.tb_dir=self.tv_dir.get_buffer()
-        self.tb_dir.set_text(self.current_values['directions'])
+        self.tb_dir.set_text(self.current_values.directions)
         #setting the description textview string
         self.tv_desc=self.xml.get_widget("tv_desc")
         self.tb_desc=self.tv_desc.get_buffer()
-        self.tb_desc.set_text(self.current_values['description'])
+        self.tb_desc.set_text(self.current_values.description)
         #setting the rating
         self.sb_rating=self.xml.get_widget("sb_rating")
-        self.sb_rating.set_value(self.current_values['rating'])
+        self.sb_rating.set_value(self.current_values.rating)
         self.sb_rating.update()
         #set the type
         self.set_type()
         
         for hb in self.vb_cat.get_children():
             for cb in hb.get_children():
-                if hasattr(cb, "get_label"):
-                    if cb.get_label() in self.current_values["categories"]:
+                #if hasattr(cb, "get_label"):
+                if isinstance(cb, gtk.CheckButton):
+                    if cb.get_label() in self.current_values.categories:
                         cb.set_active(True)
     
     def update2(self,widget):
@@ -534,46 +583,48 @@ class current_recipe(base_recipe_window):
             update['ing_map']=False
             update['cat_map']=False
             for key in ["name","type","directions","description","rating"]:
-                if values[key] != self.current_values[key]:
+                if getattr(values,key) != getattr(self.current_values,key):
                     update['recipes']=True
 
-            self.current_values['ingredients_list']=\
-                self.parse_ingredients(self.current_values['ingredients'])
-            if values['ingredients_list'] != \
-              self.current_values['ingredients_list']:
+            self.current_values.ingredients_list=\
+                self.parse_ingredients(self.current_values.ingredients)
+            if getattr(values,'ingredients_list') != \
+              getattr(self.current_values,'ingredients_list'):
                 update['ing_map']=True
-            if values['categories'] != self.current_values['categories']:
+            if getattr(values,'categories') != \
+              getattr(self.current_values,'categories'):
                 update['cat_map']=True
             
             if update['recipes']:
                 self.cur.execute(
                  """UPDATE recipes SET name=%s,description=%s,directions=%s,
-                    type=%s,rating=%s WHERE recipe_id=%s""", (values['name']\
-                    ,values['description'],values['directions']\
-                    ,values['type_id'],values['rating'],self.recipe_id))
+                    type=%s,rating=%s WHERE recipe_id=%s""",
+                    (values.name ,values.description,values.directions\
+                    ,values.type_id,values.rating,self.recipe_id))
             
             if update['ing_map']:
                 self.cur.execute("""DELETE FROM ingredient_map WHERE\
                                     recipe_id=%s""", [self.recipe_id])
-                values['ing_map']=self.build_ing_map_inserts(values['ingredients_list'],self.recipe_id)
-                if len(values['ing_map']) >0:
+                values.ing_map=self.build_ing_map_inserts(values.ingredients_list,self.recipe_id)
+                if len(values.ing_map) >0:
                     self.cur.executemany("""INSERT INTO ingredient_map \
                         (recipe_id,amount,unit_id,ingredient_id,notes)\
-                        VALUES (%s,%s,%s,%s,%s)""", values['ing_map'])
+                        VALUES (%s,%s,%s,%s,%s)""", values.ing_map)
             if update['cat_map']:
-                cat_del=[x for x in self.current_values['categories'] if not x in values['categories']]
-                cat_add=[x for x in values['categories'] if not x in \
-                    self.current_values['categories']]
-                values['cat_map']=\
+                cat_del=[x for x in self.current_values.categories if \
+                    not x in values.categories]
+                cat_add=[x for x in values.categories if not x in \
+                    self.current_values.categories]
+                values.cat_map=\
                     self.build_cat_map_inserts(cat_add,self.recipe_id)
                 self.cur.executemany(
                     """INSERT INTO category_map (recipe_id,category_id)\
-                       VALUES (%s,%s)""", values['cat_map'])
-                values['cat_map_del']=\
+                       VALUES (%s,%s)""", values.cat_map)
+                values.cat_map_del=\
                     self.build_cat_map_inserts(cat_del,self.recipe_id)
-                if len(values['cat_map_del']) > 0:
+                if len(values.cat_map_del) > 0:
                     self.cur.execute("""DELETE FROM category_map WHERE\
-                      recipe_id=%s AND category_id=%s""",values['cat_map_del'])
+                      recipe_id=%s AND category_id=%s""",values.cat_map_del)
 
         except:
             errors=sys.exc_info()
@@ -698,6 +749,7 @@ class search_results_window:
         main_window.window.show()
     
 def get_db_connection():
+    global con
     if options['database_type']=="postgres":
         import pgdb
         con=pgdb.connect(host=options['database_host'],\
@@ -727,7 +779,7 @@ if __name__ == '__main__':
     import pygtk,gtk,gtk.glade,gobject,os,string,sys,traceback,rms_config
 
     get_options()
-    print options
+    #print options
     get_db_connection()
 
     main_window=home_window()
