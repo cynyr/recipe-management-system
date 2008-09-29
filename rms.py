@@ -6,7 +6,6 @@ There isn't a home page yet.
 """
 
 class RecipeData:
-
     """
     name                the name
     type                The text form of the type
@@ -24,7 +23,7 @@ class RecipeData:
         if "name" in keys:
             self.name=keywords['name']
         else:
-            self.name=None
+            self.name=""
         if "type" in keys:
             self.type=keywords['type']
         else:
@@ -36,7 +35,7 @@ class RecipeData:
         if "rating" in keys:
             self.rating=keywords['rating']
         else:
-            self.rating=None
+            self.rating=0
         if "categories" in keys:
             self.categories=keywords['categories']
         else:
@@ -44,19 +43,32 @@ class RecipeData:
         if "directions" in keys:
             self.directions=keywords['directions']
         else:
-            self.directions=None
+            self.directions=""
         if "description" in keys:
             self.description=keywords['description']
         else:
-            self.description=None
+            self.description=""
         if "ingredients_text" in keys:
             self.ingredients_text=keywords['ingredients_text']
         else:
-            self.ingredients_text=None
+            self.ingredients_text=""
         if "ingredients_list" in keys:
             self.ingredients_list=keywords['ingredients_list']
         else:
             self.ingredients_list=None
+
+    def __str__(self):
+        s=""
+        nl="\n"
+        l=[]
+        l.append("Name: " + self.name + ", " + str(self.rating) + " Stars")
+        l.append("Description: " + self.description)
+        l.append("")
+        l.append(self.ingredients_text)
+        l.append('')
+        l.append(self.directions)
+        s=nl.join(l)
+        return s
 
 class BaseRecipeWindow:
     """A window and functions to add a new recipe"""
@@ -81,6 +93,24 @@ class BaseRecipeWindow:
         self.do_categories()
         #add types to the window
         self.do_types()
+        #Get the menubar
+        self.menu=self.xml.get_widget("menubar1")
+        #start the file menu
+        self.mi_file=gtk.MenuItem("File")
+        self.m_file=gtk.Menu()
+        self.mi_file.set_submenu(self.m_file)
+        self.menu.add(self.mi_file)
+        #edit menu
+        self.mi_edit=gtk.MenuItem("Edit")
+        self.m_edit=gtk.Menu()
+        self.mi_edit.set_submenu(self.m_edit)
+        self.menu.add(self.mi_edit)
+        #help menu
+        self.mi_help=gtk.MenuItem("Help")
+        self.m_help=gtk.Menu()
+        self.mi_help.set_submenu(self.m_help)
+        self.menu.add(self.mi_help)
+
 
         self.w.show_all()
         self.cur.close()
@@ -433,7 +463,7 @@ class current_recipe(BaseRecipeWindow):
     Needs to be passed a recipe ID number and"""
 
     def __init__(self,recipe_id=5):
-       """An extentension of the recipe window"""
+        """An extentension of the recipe window"""
 
         #store away the recipe_id passed in
         self.recipe_id=recipe_id
@@ -454,7 +484,17 @@ class current_recipe(BaseRecipeWindow):
         self.cur.close()
         #fill out the form with it
         self.fill_out_recipe()
+        self.mi_print=gtk.MenuItem("Print")
+        self.mi_print.connect("activate", self.do_print)
+        self.m_file.add(self.mi_print)
+        self.mi_print.show()
+        self.mi_file.show()
     
+    def do_print(self,widget):
+        self.cur=con.cursor()
+        do_print(None,self.get_form_data())
+        self.cur.close()
+
     def set_type(self):
         """Set the list to show the correct type"""
         self.ce = self.xml.get_widget("ce_types")
@@ -694,7 +734,6 @@ class home_window:
             get_options()
             print options
             get_db_connection()
-            
         print widget,label
 
     def start_main_loop(self):
@@ -762,6 +801,7 @@ def get_db_connection():
                             db=options['database_db'],\
                             user=options['database_uid'],\
                             passwd=options['database_passwd'])
+
 def get_options():
     from config_parse import ParseConfigFile
     default_options=dict(
@@ -775,12 +815,123 @@ def get_options():
     global options
     options=ParseConfigFile(paths,default_options)
 
+class PrintData:
+    text = None
+    layout = None
+    page_breaks = None
+
+def do_print(widget,text):
+    print text
+    global settings, page_setup
+    print_data=PrintData()
+    print_data.text=str(text)
+    print_op = gtk.PrintOperation()
+    if settings is not None:
+        print_op.set_print_settings(settings)
+
+    if page_setup is not None:
+        print_op.set_default_page_setup(page_setup)
+
+    print_op.connect("begin_print", begin_print, print_data)
+    print_op.connect("draw_page", draw_page, print_data)
+
+    try:
+        res = print_op.run(gtk.PRINT_OPERATION_ACTION_PRINT_DIALOG, main_window.window)
+    except gobject.GError, ex:
+        error_dialog = gtk.MessageDialog(main_window,
+                                         gtk.DIALOG_DESTROY_WITH_PARENT,
+                                         gtk._MESSAGE_ERROR,
+                                         gtk.BUTTONS_CLOSE,
+                                         ("Error printing file:\n%s" % str(ex)))
+        error_dialog.connect("response", gtk.Widget.destroy)
+        error_dialog.show()
+    else:
+        if res == gtk.PRINT_OPERATION_RESULT_APPLY:
+            settings = print_op.get_print_settings()
+    
+def begin_print(operation,context, print_data):
+    width = context.get_width()
+    height = context.get_height()
+    print_data.layout = context.create_pango_layout()
+    print_data.layout.set_font_description(pango.FontDescription("Sans 12"))
+    print_data.layout.set_width(int(width*pango.SCALE))
+    print_data.layout.set_text(print_data.text)
+
+    num_lines = print_data.layout.get_line_count()
+
+    page_breaks = []
+    page_height = 0
+
+    for line in range(num_lines):
+        layout_line = print_data.layout.get_line(line)
+        ink_rect, logical_rect = layout_line.get_extents()
+        lx, ly, lwidth, lheight = logical_rect
+        line_height = lheight / 1024.0
+        if page_height + line_height > height:
+	    page_breaks.append(line)
+	    page_height = 0
+        page_height += line_height
+    operation.set_n_pages(len(page_breaks) + 1)
+    print_data.page_breaks = page_breaks
+    
+def draw_page(operation, context, page_nr, print_data):
+    assert isinstance(print_data.page_breaks, list)
+    if page_nr == 0:
+        start = 0
+    else:
+        start = print_data.page_breaks[page_nr - 1]
+
+    try:
+        end = print_data.page_breaks[page_nr]
+    except IndexError:
+        end = print_data.layout.get_line_count()
+    
+    cr = context.get_cairo_context()
+
+    cr.set_source_rgb(0, 0, 0)
+  
+    i = 0
+    start_pos = 0
+    iter = print_data.layout.get_iter()
+    while 1:
+        if i >= start:
+            line = iter.get_line()
+            _, logical_rect = iter.get_line_extents()
+            lx, ly, lwidth, lheight = logical_rect
+            baseline = iter.get_baseline()
+            if i == start:
+                start_pos = ly / 1024.0
+            cr.move_to(lx / 1024.0, baseline / 1024.0 - start_pos)
+            cr.show_layout_line(line)
+        i += 1
+        if not (i < end and iter.next_line()):
+            break
+
+
+
+
 if __name__ == '__main__':
-    import pygtk,gtk,gtk.glade,gobject,os,string,sys,traceback,rms_config
+
+    import pygtk
+    import gtk
+    import gtk.glade
+    import gobject
+    import os
+    import string
+    import sys
+    import traceback
+    import pango
+    import rms_config
 
     get_options()
     #print options
     get_db_connection()
+
+    global main_window
+    global page_setup
+    global settings
+    page_setup = None
+    settings = None
 
     main_window=home_window()
     main_window.start_main_loop()
