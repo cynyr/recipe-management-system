@@ -4,6 +4,26 @@ Written by Andrew Frink rms.afrink@gmail.com
 licensed under GPLv2 or later at your option.
 There isn't a home page yet.
 """
+import pygtk
+import gtk
+import gtk.glade
+import gobject
+import os
+import string
+import sys
+import traceback
+import pango
+import rms_config
+from kiwi.ui.objectlist import ObjectList, Column
+
+class RecipeInfo:
+    """an Instance that holds recipe data"""
+    def __init__(self,data):
+        self.r_id=data[0]
+        self.name=data[1]
+        self.desc=data[2]
+    def __str__(self):
+        return " ".join([self.name+':', self.desc])
 
 class RecipeData:
     """
@@ -69,6 +89,9 @@ class RecipeData:
         l.append(self.directions)
         s=nl.join(l)
         return s
+
+class RecipeData2(RecipeData):
+    
 
 class BaseRecipeWindow:
     """A window and functions to add a new recipe"""
@@ -717,6 +740,10 @@ class home_window:
         self.b_submit=gtk.Button("Submit")
         self.b_submit.connect("clicked", self.submit_clicked)
         self.vbox.add(self.b_submit)
+        #make a button to plan meals
+        self.b_plan = gtk.Button("Meal Plan")
+        self.b_plan.connect("clicked", self.plan_clicked)
+        self.vbox.add(self.b_plan)
         #make an add new button hook clicked and add it to the vbox
         self.b_add_new=gtk.Button("Add new Recipe")
         self.b_add_new.connect("clicked", self.add_clicked)
@@ -747,6 +774,14 @@ class home_window:
         #open the results window and give it the text from the entry
         self.search=search_results_window(searchline=self.searchstring)
         self.window.hide()
+    def plan_clicked(self,widget):
+        """open the search results window"""
+        #get the text in the entry box
+        self.searchstring=self.search_entry.get_text()
+        #print self.searchstring
+        #open the results window and give it the text from the entry
+        self.search=MealPlan(searchline=self.searchstring)
+        self.window.hide()
     def add_clicked(self, widget):
         """open the add new window and hide myself"""
         self.window.hide()
@@ -758,27 +793,62 @@ class home_window:
 class search_results_window:
     """A results window for a searching for a recipe"""
 
-    def __init__ (self, searchline=""):
+    def __init__ (self, searchline="", mode=gtk.SELECTION_SINGLE):
         """Search for the name like searchstring"""
         self.window=gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.connect("destroy", self.exit)
-        self.vbox=gtk.VBox(True,0)
+        self.window.set_size_request(600, 250)
+        self.vbox=gtk.VBox(homogeneous=False,spacing=0)
         self.window.add(self.vbox)
 
         self.cur=con.cursor()
-        searchline="%" + searchline + "%"
-        self.cur.execute("""SELECT recipe_id,name,description FROM recipes WHERE name LIKE %s""",\
-                         (searchline,))
-        results=self.cur.fetchall()
-        for button_data in results:
-            self.hbox=gtk.HBox(True,0)
-            self.b=gtk.Button(button_data[1])
-            self.b.connect("clicked", self.show_recipe, button_data[0])
-            self.l=gtk.Label(button_data[2])
-            self.hbox.add(self.b)
-            self.hbox.add(self.l)
-            self.vbox.add(self.hbox)
+        if searchline.count(':') !=0:
+            search_options=dict(self.parse_search_string(searchline))
+            print search_options
+            results=[[5, 'Foo2', 'yummy food'], 
+                     [6, 'Foobar', 'best foobar evar!']]
+        else:
+            searchline="%" + searchline + "%"
+            self.cur.execute("""SELECT recipe_id,name,description FROM recipes WHERE name LIKE %s""", (searchline,))
+            results=self.cur.fetchall()
+
+        my_columns = [  Column("name", title="Name", sorted=True),
+                        Column("desc", title="Description")
+                     ]
+        self.objectlist = ObjectList(my_columns, mode=mode)
+        self.objectlist.set_size_request(600,225)
+        recipes=[RecipeInfo(x) for x in results]
+        self.objectlist.add_list(recipes)
+        self.b=gtk.Button("Show Selected")
+        self.b.connect("clicked", self.show_recipe2)
+        self.vbox.add(self.objectlist)
+        self.vbox.add(self.b)
+
         self.window.show_all()
+
+    def parse_search_string(self,s):
+        foo,indexes=findall(':',s)
+        p=0
+        l=[]
+        s_len=len(s)
+        for i in indexes:
+            for j in range(i+1,s_len+1):
+                #print (j,s_len)
+                if j >= s_len:
+                    l.append(s[p:j].strip())
+                    break
+                else:
+                    if s[j] == " ":
+                        t=j
+                    if s[j] == ':':
+                        l.append(s[p:t].strip())
+                        p=t
+                        break
+        return [[y.lower() for y in x.split(':')] for x in l]
+    def show_recipe2(self,widget,*data):
+        recipe=self.objectlist.get_selected()
+        self.window.hide()
+        current_recipe(recipe_id=recipe.r_id)
 
     def show_recipe(self,widget,data):
         self.window.hide()
@@ -787,6 +857,23 @@ class search_results_window:
     def exit(self, widget):
         main_window.window.show()
     
+class MealPlan(search_results_window):
+    def __init__(self,searchline=""):
+        search_results_window.__init__(self, searchline, mode=gtk.SELECTION_MULTIPLE)
+        print ObjectList.__init__.__doc__
+
+    def show_recipe2(self,widget,*data):
+        recipe=self.objectlist.get_selected_rows()
+        self.window.hide()
+        current_recipe(recipe_id=recipe[0].r_id)
+
+
+
+class PrintData:
+    text = None
+    layout = None
+    page_breaks = None
+
 def get_db_connection():
     global con
     if options['database_type']=="postgres":
@@ -815,10 +902,21 @@ def get_options():
     global options
     options=ParseConfigFile(paths,default_options)
 
-class PrintData:
-    text = None
-    layout = None
-    page_breaks = None
+def findall(char,string):
+    """Findall(char,string)
+
+    Find the index of every instance of char in string and return a tuple
+    (string,indexes)"""
+    s=string
+    l=[]
+    i,c=0,0
+    for foo in range(s.count(char)):
+        i=s.find(char)
+        l.append(i+c)
+        s=s[i+1:]
+        c=c+i+1
+
+    return (string,l)
 
 def do_print(widget,text):
     print text
@@ -911,18 +1009,6 @@ def draw_page(operation, context, page_nr, print_data):
 
 
 if __name__ == '__main__':
-
-    import pygtk
-    import gtk
-    import gtk.glade
-    import gobject
-    import os
-    import string
-    import sys
-    import traceback
-    import pango
-    import rms_config
-
     get_options()
     #print options
     get_db_connection()
