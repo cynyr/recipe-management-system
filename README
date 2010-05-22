@@ -1,7 +1,14 @@
-This has been dropped by me in favor of gormet (http://sourceforge.net/projects/grecipe-manager/).
+This has been dropped by me in favor of gourmet (http://sourceforge.net/projects/grecipe-manager/).
+After using(trying to use) Gourmet I found it unsatisfatory, I decieded that what I really want is a
+standards compliant website that allows downloading PDFs. 
+The reason for the web based UI:
+    - lots of devices have web browsers.
+    - Ultimitly I would like to have this system running on a touchscreen in my kitchen
+    - The current trend towards internet tablets should make the cost of such a system cheaper.
 
-A recipe management system writen in Python/GTK licensed under the GPLv2
-or newer licenses. This is still very much in the beta stage
+A recipe management system writen in python/django.
+
+The old code was python/gtk.
 
 For a list of things to come, see TODO
 
