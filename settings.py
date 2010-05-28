@@ -11,7 +11,7 @@ ADMINS = (
 MANAGERS = ADMINS
 
 DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-DATABASE_NAME = './rms'             # Or path to database file if using sqlite3.
+DATABASE_NAME = './rms.sqlite3'             # Or path to database file if using sqlite3.
 DATABASE_USER = 'rmssite'             # Not used with sqlite3.
 DATABASE_PASSWORD = 'abbggg'         # Not used with sqlite3.
 DATABASE_HOST = ''             # Set to empty string for localhost. Not used with sqlite3.
