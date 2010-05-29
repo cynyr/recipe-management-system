@@ -6,3 +6,14 @@
 * Add the ability to plan a week of meals
 * Add support for making a shopping list based on ingredients for 1 or more 
   recipes
+
+
+Technical list:
+    Searching, by +/-inredient,
+                  cuisine, 
+                  total time(greater than, less than, equal),
+                  author,
+
+
+    Support for pdfs, this will be though reportlab, see tests/platapus2.py
+    A nice view to add recipes, maybe a default view would work. 
