@@ -81,7 +81,7 @@ def go():
     l = [["line of text" for x in range(4)]]
     #style = ParagraphStyle("ingredent", leftIndent=10, bulletText="\xe2\x80\xa2")
     style = ingredentsStyle()
-    p = Paragraph("1/2 tablespoons of finely chopped green banana peeled",style, bulletText="\xe2\x80\xa2")
+    p = Paragraph("1/2 tablespoons of finely chopped grem en banana peeled",style, bulletText="\xe2\x80\xa2")
     l=[[p,p,p],
        ["test 1", "test 1", "test1"]]
     widths = [45,45,45]
