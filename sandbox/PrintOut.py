@@ -12,6 +12,8 @@ from reportlab.rl_config import defaultPageSize
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 
+__all__=['PageSizeError', 'NoteCard', 'Recipe', 'do_print_out']
+
 class PageSizeError(Exception):
     def __init__(self, size):
         self._size=size
@@ -136,12 +138,13 @@ class CenterStyle(ParagraphStyle):
 
 class Recipe():
     def __init__(self, title="Title", preptime="15", cooktime="30",
-                 ingredients=[], instructions=[]):
-        self.Title=title
+                 ingredients=[], instructions=[], author="pyRMS"):
+        self.Title=str(title)
         self.Preptime=int(preptime)
         self.Cooktime=int(cooktime)
         self.Ingredients=list(ingredients)
         self.Instructions=list(instructions)
+        self.Author=str(author)
 
     def ingredients_columns(self,columns=2):
         #stupid rounding needs to handle when it splits evenly.
@@ -165,13 +168,29 @@ class Recipe():
                           self.Instructions)
 
 def get_doc(title, author, size=(4,6)):
-    """Takes a size (HxW), title, and author, and returns a page class"""
+    """Takes a size (H,W), title, and author, and returns a page class.
+
+    get_doc(title, author,size)
+    size must be a tuple (height,width) defaults to (4,6).
+    returns a tuple of (document,columns), this allows setting of recipe
+    columns based on width, as of right now 2 is returned unless size 
+    is (11,8.5). 
+    """
     
+    #add some more logic for guessing columns here. NoteCard accepts any 
+    #(height,width) tuple. 
     doc=NoteCard(title, author, size=size)
     columns = (3 if size == (11,8.5) else 2)
     return (doc,columns)
 
 def parse_simple_txt(f):
+    """Parses a very simple text file.
+
+    This is fragile, and a more robust parser will need to added in the future.
+    Parsers should return a Recipe object. do_print_out() will print
+    a recipe object.
+
+    """
     try:
         txt_file=open(f)
     except IOError:
@@ -189,15 +208,27 @@ def parse_simple_txt(f):
     return None
 
 def instructions_paragraph(recipe):
+    """Add <seq> tags to the front of each Instruction"""
     return ["".join(["<seq>. ", x]) for x in recipe.Instructions]
 
-def do_print_out(recipe,page_size,author="pyRMS"):
+def do_print_out(recipe,page_size,filename=None):
+    """do_print_out(recipe,page_size,filename=None)
+
+    This makes makes a pdf out of the recipe opject on the size paper requested.
+    recipe is a recipe object.
+    page_size is (height,width).
+    If no file name is provided the automatic name generator is used. 
+    See NoteCard class for more details.
+    """
+
     try:
-        (doc,columns)=get_doc(recipe.Title, author, page_size)
+        size=tuple(size)
+        (doc,columns)=get_doc(recipe.Title, recipe.Author, page_size)
     except PageSizeError as err:
         print(err)
+    except TypeError:
+        print("size needs to be a iterable")
     else:
-        #doc = doc(name,recipe.Title, "RMS")
         styles = getSampleStyleSheet()
         btext="\xe2\x80\xa2"
         n_style=styles["Normal"]
@@ -205,7 +236,6 @@ def do_print_out(recipe,page_size,author="pyRMS"):
         ing_style=IngredientsStyle()
         Story=[]
         spacer=Spacer(1,0.05*inch)
-        #spacer=Paragraph("&NBSP",n)
 
         #Header block
         Story.append(Paragraph(recipe.Title, styles["title"]))
@@ -218,6 +248,7 @@ def do_print_out(recipe,page_size,author="pyRMS"):
         table=[[Paragraph(y,ing_style,bulletText=btext) for y in x] for x in table] 
         table=Table(table)
         pad=0
+        #make the table take up less space.
         table.setStyle(TableStyle([("BOTTOMPADDING",(0,0),(-1,-1),pad),
                                    ("TOPPADDING", (0,0),(-1,-1),pad),
                                    ("RIGHTPADDING", (0,0),(-1,-1),pad),
@@ -236,11 +267,23 @@ def do_print_out(recipe,page_size,author="pyRMS"):
 
 
 if __name__ == "__main__":
-    from sys import argv
-    input_file = argv[1]
-    recipe=parse_simple_txt(input_file)
+    from sys import argv,exit
+    #input_file = argv[1]
+    if "--help" in argv:
+        print("""Makes pdfs from simple text files, the format follows:
+
+${title}
+${preptime} #as an int
+${cooktime} #as an int
+${2 blank lines}
+ingriedients one per line
+${2 blank lines}
+directions one per line""")
+        exit(0)
+    for f in argv[1:]:
+        recipe=parse_simple_txt(f)
     
-    do_print_out(recipe,(4,6))
-    do_print_out(recipe,(3,5))
-    do_print_out(recipe,(11,8.5))
+        do_print_out(recipe,(4,6))
+        do_print_out(recipe,(3,5))
+        do_print_out(recipe,(11,8.5))
 
