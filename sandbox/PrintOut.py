@@ -12,42 +12,9 @@ from reportlab.rl_config import defaultPageSize
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 
-__all__=['PageSizeError', 'NoteCard', 'Recipe', 'do_print_out']
+__all__=['NoteCard', 'Recipe', 'do_print_out']
 
-class PageSizeError(Exception):
-    def __init__(self, size):
-        self._size=size
-    def __str__(self):
-        return '%s is an unsupported page size, only 4"x6" is supported currently' % (self._size)
 
-class FourBySixNotecard(BaseDocTemplate):
-    def __init__(self,filename, title, author):
-        self.filename = filename
-        #          (WIDTH,HEIGHT)
-        pageSize = (6*inch,4*inch)
-        F = Frame(0,0,6*inch,4*inch,
-                  leftPadding=0.5*inch,
-                  bottomPadding=0.50*inch,
-                  rightPadding=0.25*inch,
-                  topPadding=0.25*inch,
-                  showBoundary=0)
-        PT = PageTemplate(id="Notecard", frames=[F,])
-        BaseDocTemplate.__init__(self, self.filename,
-                                 pageTemplates=[PT,], 
-                                 pagesize=pageSize,
-                                 showBoundary=0,
-                                 leftMargin=0,
-                                 rightMargin=0,
-                                 topMargin=0,
-                                 bottomMargin=0,
-                                 allowSplitting=1,
-                                 title=title,
-                                 author=author)
-    def build(self,flowables):
-        BaseDocTemplate.build(self, flowables=flowables,
-                              filename=self.filename,
-                              canvasmaker=canvas.Canvas)
-        
 class NoteCard(BaseDocTemplate):
     def __init__(self,title, author, filename=None, size=(4,6), sb=0):
         (height,width,) = size
@@ -137,14 +104,16 @@ class CenterStyle(ParagraphStyle):
         ParagraphStyle.__init__(self,"ingredentsStyle")
 
 class Recipe():
-    def __init__(self, title="Title", preptime="15", cooktime="30",
-                 ingredients=[], instructions=[], author="pyRMS"):
+    def __init__(self, title="Title", preptime="0 Min", cooktime="0 Min",
+                 servings="4", ingredients=[], instructions=[],
+                 author="pyRMS", *args, **kwords):
         self.Title=str(title)
-        self.Preptime=int(preptime)
-        self.Cooktime=int(cooktime)
+        self.Preptime=str(preptime)
+        self.Cooktime=str(cooktime)
         self.Ingredients=list(ingredients)
         self.Instructions=list(instructions)
         self.Author=str(author)
+        self.Servings=str(servings)
 
     def ingredients_columns(self,columns=2):
         #stupid rounding needs to handle when it splits evenly.
@@ -157,17 +126,22 @@ class Recipe():
                 table[x%rows].append("")
         return table
 
+    @property
+    def instructions_paragraph(self,):
+        return ["".join(["<seq>. ", x]) for x in self.Instructions]
+
     def __str__(self,):
         return "\n".join([self.Title, 
                             str(self.Preptime),
                             str(self.Cooktime),
+                            "Servings: " + str(self.Servings),
                           ] +
                           ["\n",] +
                           self.Ingredients +
                           ["\n",] +
                           self.Instructions)
 
-def get_doc(title, author, size=(4,6)):
+def get_doc(title, author, size=(4,6), filename=None):
     """Takes a size (H,W), title, and author, and returns a page class.
 
     get_doc(title, author,size)
@@ -179,7 +153,7 @@ def get_doc(title, author, size=(4,6)):
     
     #add some more logic for guessing columns here. NoteCard accepts any 
     #(height,width) tuple. 
-    doc=NoteCard(title, author, size=size)
+    doc=NoteCard(title, author, size=size, filename=filename)
     columns = (3 if size == (11,8.5) else 2)
     return (doc,columns)
 
@@ -194,41 +168,39 @@ def parse_simple_txt(f):
     try:
         txt_file=open(f)
     except IOError:
-        if isinstance(f,list):
-            lines = f
-        else:
+        try:
+            lines = list(f)
+        except:
             raise
     else:
         lines = txt_file.readlines()
         r = Recipe()
         sections = [x.strip("\n") for x in "".join(lines).split("\n\n",3)]
         [header,r.Ingredients,r.Instructions]=[x.split("\n") for x in sections]
-        [r.Title, r.Preptime, r.Cooktime] = header
+        header=[x.split(":")[-1].strip() for x in header]
+        [r.Title, r.Preptime, r.Cooktime, r.Servings] = header
         return r
     return None
-
-def instructions_paragraph(recipe):
-    """Add <seq> tags to the front of each Instruction"""
-    return ["".join(["<seq>. ", x]) for x in recipe.Instructions]
 
 def do_print_out(recipe,page_size,filename=None):
     """do_print_out(recipe,page_size,filename=None)
 
     This makes makes a pdf out of the recipe opject on the size paper requested.
-    recipe is a recipe object.
+    recipe is a Recipe object.
     page_size is (height,width).
     If no file name is provided the automatic name generator is used. 
     See NoteCard class for more details.
     """
 
     try:
-        size=tuple(size)
-        (doc,columns)=get_doc(recipe.Title, recipe.Author, page_size)
-    except PageSizeError as err:
-        print(err)
+        page_size=tuple(page_size)
     except TypeError:
         print("size needs to be a iterable")
     else:
+        (doc,columns)=get_doc(recipe.Title,
+                              recipe.Author,
+                              page_size,
+                              filename=filename)
         styles = getSampleStyleSheet()
         btext="\xe2\x80\xa2"
         n_style=styles["Normal"]
@@ -239,7 +211,9 @@ def do_print_out(recipe,page_size,filename=None):
 
         #Header block
         Story.append(Paragraph(recipe.Title, styles["title"]))
-        times="Prep Time: %s Min, Cook Time: %s Min" %(recipe.Preptime,recipe.Cooktime)
+        #string mod works inside vars as well. s="%s"; s%(foo,)
+        time_s="Prep Time: %s, Cook Time: %s"
+        times=time_s %(recipe.Preptime,recipe.Cooktime)
         Story.append(Paragraph(times,c_style))
         Story.append(spacer)
         
@@ -257,7 +231,7 @@ def do_print_out(recipe,page_size,filename=None):
         Story.append(spacer)
         
         #directions block
-        p = [Paragraph(x,n_style) for x in instructions_paragraph(recipe)]
+        p = [Paragraph(x,n_style) for x in recipe.instructions_paragraph]
         #fix making more than one printout per python instance.
         #otherwise the directions count overall not per printout.
         p += [Paragraph("<seqreset>",n_style)] 
